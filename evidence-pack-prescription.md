@@ -31,15 +31,16 @@
 
 | Quote / review / observation | Nguồn | User là ai? | Pain/failure mode |
 |---|---|---|---|
-| App nhắc thuốc: user phàn nàn phải **nhập tay từng thuốc**, không scan đơn | App Store — category “medication reminder” (Medisafe, MyTherapy, …) | Bệnh nhân mãn tính / sau khám | Nhập tay = friction |
+| Google Play crawl MyTherapy: app có **5,000,000+ installs**, rating ~**4.55/5**, review mới nhắc nhiều tới reminders, alarms, add/enter meds, dose/dosage, refill tracking; app mạnh ở nhắc lịch sau khi user đã khai báo thuốc | `google-play-scraper` crawl app `eu.smartpatient.mytherapy` — output: [evidences/mytherapy_google_play_evidence.xlsx](evidences/mytherapy_google_play_evidence.xlsx) | Bệnh nhân mãn tính / người cần uống thuốc đều | Reminder có nhu cầu thật; friction nằm ở bước **biến đơn thuốc thành lịch** trước khi reminder chạy |
 | “Không hiểu đơn bác sĩ viết” | Pattern phổ biến BV công (analog) | Người cao tuổi / người nhà | Literacy + handwriting (out of scope v1) |
 | Vinmec / app BV: có đơn điện tử nhưng **chưa thấy** 1 nút “tạo lịch uống từ đơn” trong self-use | Giả định từ teardown V-App + quan sát | User Vinmec | Opportunity in-ecosystem |
 
-Nếu chưa có nguồn ngoài nhóm, ghi rõ:
+Nguồn ngoài nhóm đã bổ sung:
 
 ```text
-Nhóm sẽ lấy 3 review App Store (app nhắc thuốc) + 1 phỏng vấn nhanh người từng tự gõ lịch từ đơn
-trước M1 Day 06. Evidence chính hiện tại: self-use + đơn mẫu + pain timing.
+Google Play crawl bằng google-play-scraper cho MyTherapy (eu.smartpatient.mytherapy), ngày 2026-06-03.
+Evidence chính: app reminder có traction lớn; review sample cho thấy reminders/refills/dose tracking hữu ích,
+nhưng competitor baseline vẫn không đóng loop scan đơn → lịch uống + drug card tiếng Việt.
 ```
 
 ---
@@ -48,7 +49,8 @@ trước M1 Day 06. Evidence chính hiện tại: self-use + đơn mẫu + pain 
 
 | App / mô hình | Họ xử lý task này thế nào? | Pattern học được | 1 ngày? |
 |---|---|---|---|
-| **Medisafe / MyTherapy** | Nhắc lịch tốt, người dùng nhập tên thuốc và tần suất uống bằng tay| Lịch + push | ✅ Mock lịch, không build full |
+| **MyTherapy** | Google Play crawl: app reminder/tracker lớn, mô tả tập trung vào pill reminder, refill/prescription reminders, health journal; review sample nhắc add/enter meds, reminders, alarms, dose/dosage, refill | Reminder + adherence tracking là nhu cầu thật; cơ hội khác biệt là **scan đơn → confirm → lịch + drug card**, giảm nhập tay | ✅ Mock lịch + review/confirm, không build full tracker |
+| **Medisafe** | App nhắc thuốc analog cùng category | Lịch + push | ✅ Mock lịch, không build full |
 | **Google Lens + manual** | OCR chữ, user tự copy | OCR ≠ schedule — thiếu parse tần suất | ✅ LLM parse JSON sau OCR |
 | **V-App (VinGroup)** | không parse đơn → calendar | Không đáp ứng job “từ đơn đến lịch” | ❌ Đổi track |
 | **Hospital PDF đơn** | Static PDF trong app | Nguồn input tốt cho v1 (digital) | ✅ Demo input chính |

@@ -52,7 +52,7 @@ trong khi vẫn kiểm soát rủi ro sai liều/tần suất bằng màn xác n
 | Task đủ hẹp chưa? | Demo 3–5 phút | Upload đơn → parse → **review** → Lưu → lịch + drug cards (3 thuốc demo) |
 | AI decision rõ chưa? | AI làm một việc cụ thể | OCR + parse JSON (tên, liều, tần suất, ăn trước/sau) + gợi ý slot giờ |
 | Failure path rõ chưa? | Có case test được | OCR đọc `1 lần/ngày` thay vì `3` → warn/block nếu không sửa |
-| Có evidence không? | Self-use / review / analog | Gõ tay timing, OCR thử, store review pattern, V-AI teardown |
+| Có evidence không? | Self-use / review / analog | Gõ tay timing, OCR thử, MyTherapy Google Play crawl, V-App teardown |
 
 **Build slice chốt:**
 
@@ -68,7 +68,7 @@ không Lưu calendar nếu chưa confirm.
 
 | Tình huống | Quyết định nhóm | Ghi chú |
 |---|---|---|
-| Track cũ V-AI (handoff CSKH) evidence yếu cho Day 06 | **Đổi hướng** → prescription scan | Loop rõ hơn, demo được trong 1 ngày |
+| Track cũ V-App (handoff CSKH) evidence yếu cho Day 06 | **Đổi hướng** → prescription scan | Loop rõ hơn, demo được trong 1 ngày |
 | Ý tưởng quá rộng (full Danh mục thuốc, calendar sync, đơn viết tay) | **Giảm scope** |  Bỏ đơn viết tay  |
 | AI có cần không? | **Giữ AI — Augmentation** | Parse + explain; user là decider; không auto-save |
 | Rủi ro cao (sai liều) | **Augmentation + review bắt buộc** | Highlight low-confidence; rule cảnh báo frequency bất thường |
@@ -81,7 +81,7 @@ không Lưu calendar nếu chưa confirm.
 ## 6. Câu chốt cuối (trước khi rời lớp / trước Day 06)
 
 ```text
-Dựa trên [self-use gõ lịch ~10–15 phút + OCR thử cần sửa tần suất + gap V-AI + pattern review app nhắc thuốc],
+Dựa trên [self-use gõ lịch ~10–15 phút + OCR thử cần sửa tần suất + gap V-App + MyTherapy Google Play crawl],
 nhóm sẽ build [upload đơn → OCR/parse → review → lịch uống + drug card],
 cho [người bệnh hoặc người nhà sau khám, đơn in/digital 2–5 thuốc],
 để giải quyết [chuyển đơn thành lịch uống đúng mà không gõ tay và không đoán liều],
@@ -96,7 +96,7 @@ và sẽ test failure path [OCR/parse sai tần suất 3→1 lần/ngày — war
 - Đơn **viết tay** (OCR chất lượng thấp; literacy cao tuổi)
 - Sync **Google Calendar / Apple Health**
 - Parse `cách ngày`, `khi cần`, refill
-- Track cũ **V-AI handoff CSKH** → archived (`thin-spec-v-ai.md` nếu có)
+- Track cũ **V-App handoff CSKH** → archived (`thin-spec-V-App.md` nếu có)
 
 ---
 

@@ -1,6 +1,6 @@
 # Thin SPEC — Scan Đơn Thuốc → Lịch Uống + Thẻ Thuốc
 
-Bản cam kết Day 06 — track đổi từ V-AI (archived: `thin-spec-v-ai.md`).
+Bản cam kết Day 06 — track đổi từ V-App (archived: `thin-spec-V-App.md`).
 
 ---
 
@@ -20,8 +20,8 @@ Bản cam kết Day 06 — track đổi từ V-AI (archived: `thin-spec-v-ai.md`
 | Gõ lịch 3 thuốc ~10–15 phút, hay sai tần suất | Self-use | Friction + error | Parse + review bắt buộc |
 | Không hiểu tên thuốc trên đơn | Self-use + Google | Cần drug card | DB demo + plain Vietnamese |
 | OCR ảnh đơn in: tên OK, tần suất cần sửa | Self-use | Low-confidence | Review UI, không auto-save |
-| V-AI không deep-link nhắc thuốc in-app | `v-ai-app-teardown.md` | Super-app gap | Prototype độc lập, Vinmec backlog |
-| App nhắc thuốc: nhập tay | Store review _(bổ sung)_ | Competitor baseline | Scan-first differentiation |
+| V-App không deep-link nhắc thuốc in-app | `V-App-app-teardown.md` | Super-app gap | Prototype độc lập, Vinmec backlog |
+| MyTherapy Google Play crawl: reminder/tracker có 5M+ installs, rating ~4.55; review sample nhắc add/enter meds, dose/dosage, reminders, alarms, refill | `google-play-scraper` crawl — [evidences/mytherapy_google_play_evidence.xlsx](evidences/mytherapy_google_play_evidence.xlsx) | Competitor baseline: reminder hữu ích sau khi lịch đã có | Scan-first differentiation |
 
 ---
 
@@ -174,11 +174,11 @@ Chia đều 4 phần — mỗi người ~25% scope, nộp artifact rõ trong rep
 
 | File | Mô tả |
 |---|---|
-| `01-invidual-workshop/v-ai-app-teardown.md` | Individual (sáng) — analog, không phải build target |
+| `01-invidual-workshop/V-App-app-teardown.md` | Individual (sáng) — analog, không phải build target |
 | `02-group-spec/evidence-pack-prescription.md` | Evidence pack (track mới) |
 | `02-group-spec/synthesis-decide-prescription.md` | Synthesis |
 | `02-group-spec/thin-spec-prescription.md` | Thin SPEC (file này) |
-| `02-group-spec/*-v-ai.md` | **Archived** — track cũ V-AI handoff |
+| `02-group-spec/*-V-App.md` | **Archived** — track cũ V-App handoff |
 
 ---
 
