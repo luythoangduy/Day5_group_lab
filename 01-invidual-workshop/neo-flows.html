@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vietnam Airlines NEO — Luồng As-Is / To-Be</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0f0f1a;
+    color: #e2e2f0;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 13px;
+    padding: 28px 24px 48px;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  .page-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .page-sub {
+    font-size: 13px;
+    color: #8888aa;
+    margin-bottom: 16px;
+  }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #aaa;
+  }
+  .dot {
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .dot-green  { background: #22c55e; }
+  .dot-yellow { background: #eab308; }
+  .dot-red    { background: #ef4444; }
+  .dot-gray   { background: #6b7280; }
+
+  /* ── Two-column layout ── */
+  .panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  /* Panel card */
+  .panel {
+    border-radius: 14px;
+    padding: 22px 18px 28px;
+  }
+  .panel-asis  { background: #1a1a2e; border: 1.5px solid #e55555; }
+  .panel-tobe  { background: #0f1f1a; border: 1.5px solid #22c55e; }
+
+  .panel-heading {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 3px;
+    color: #fff;
+  }
+  .panel-desc {
+    font-size: 11.5px;
+    color: #7a7a99;
+    margin-bottom: 22px;
+  }
+
+  /* ── Flow nodes ── */
+  .flow { display: flex; flex-direction: column; align-items: center; gap: 0; }
+
+  .node {
+    width: 100%;
+    border-radius: 10px;
+    padding: 10px 14px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 12px;
+    position: relative;
+  }
+  .node-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+  .node-body {
+    font-size: 12px;
+    font-weight: 400;
+    color: #ccd;
+  }
+
+  .node-user   { background: #1e3a5f; border: 1.5px solid #3b82f6; }
+  .node-system { background: #2d1e4f; border: 1.5px solid #8b5cf6; }
+  .node-ok     { background: #14532d; border: 1.5px solid #22c55e; }
+  .node-warn   { background: #451a03; border: 1.5px solid #eab308; }
+  .node-fail   { background: #3b0a0a; border: 1.5px solid #ef4444; }
+  .node-dead   { background: #1f2937; border: 1.5px solid #6b7280; }
+  .node-fix    { background: #052e16; border: 1.5px solid #16a34a; }
+
+  /* Tag badges */
+  .tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .tag-gay  { background: #ef4444; color: #fff; }
+  .tag-sua  { background: #22c55e; color: #000; }
+
+  /* Arrow */
+  .arrow {
+    width: 2px;
+    height: 18px;
+    background: #444466;
+    margin: 0 auto;
+    position: relative;
+  }
+  .arrow::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 7px solid #444466;
+  }
+
+  /* Branch row */
+  .branch-row {
+    display: grid;
+    gap: 8px;
+    width: 100%;
+  }
+  .branch-row-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .branch-row-2 { grid-template-columns: 1fr 1fr; }
+
+  .branch-node {
+    border-radius: 9px;
+    padding: 9px 8px;
+    text-align: center;
+  }
+  .branch-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+  .branch-body {
+    font-size: 11px;
+    color: #ccd;
+  }
+
+  /* Fail detail list */
+  .fail-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    margin-top: 0;
+  }
+  .fail-item {
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 11.5px;
+    color: #fca5a5;
+    border-left: 3px solid #ef4444;
+    background: #2d0a0a;
+  }
+  .fix-item {
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 11.5px;
+    color: #86efac;
+    border-left: 3px solid #22c55e;
+    background: #041a0e;
+  }
+
+  /* connector lines for branch */
+  .branch-connector {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+    height: 18px;
+    position: relative;
+  }
+  .branch-connector::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 2px; height: 100%;
+    background: #444466;
+  }
+
+  .horiz-line {
+    width: 80%;
+    height: 2px;
+    background: #444466;
+    margin: 0 auto;
+    position: relative;
+  }
+  .horiz-line::before,
+  .horiz-line::after {
+    content: '';
+    position: absolute;
+    top: -5px;
+    width: 2px; height: 12px;
+    background: #444466;
+  }
+  .horiz-line::before { left: 0; }
+  .horiz-line::after  { right: 0; }
+
+  .spacer { height: 8px; }
+</style>
+</head>
+<body>
+
+<div class="page-title">Vietnam Airlines NEO — Luồng As-Is / To-Be</div>
+<div class="page-sub">Workshop cá nhân · Thang · Batch 02 Day 05</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="dot dot-green"></div> Ổn / đã cải thiện</div>
+  <div class="legend-item"><div class="dot dot-yellow"></div> Yếu / chưa đủ</div>
+  <div class="legend-item"><div class="dot dot-red"></div> Điểm gãy</div>
+  <div class="legend-item"><div class="dot dot-gray"></div> Kẹt / dead-end</div>
+</div>
+
+<div class="panels">
+
+  <!-- ══════════════ AS-IS ══════════════ -->
+  <div class="panel panel-asis">
+    <div class="panel-heading">As-Is — Hiện trạng</div>
+    <div class="panel-desc">Cách NEO đang chạy khi mình dùng thật (Keyword RAG + Decision tree)</div>
+
+    <div class="flow">
+
+      <!-- User -->
+      <div class="node node-user">
+        <div class="node-title">Người Dùng</div>
+        <div class="node-body">Hỏi: lịch bay · trạng thái · hành lý · khiếu nại</div>
+      </div>
+
+      <div class="arrow"></div>
+
+      <!-- System -->
+      <div class="node node-system">
+        <div class="node-title">Hệ Thống</div>
+        <div class="node-body">Phân loại từ khóa + Decision tree cứng</div>
+      </div>
+
+      <div class="arrow"></div>
+
+      <!-- Horizontal spread -->
+      <div class="horiz-line"></div>
+      <div class="spacer"></div>
+
+      <!-- 3 branches -->
+      <div class="branch-row branch-row-3">
+        <div class="branch-node node-ok">
+          <div class="branch-label" style="color:#86efac;">Rõ Ràng</div>
+          <div class="branch-body">Trả văn bản quy định sẵn</div>
+        </div>
+        <div class="branch-node node-warn">
+          <div class="branch-label" style="color:#fde68a;">Mơ Hồ</div>
+          <div class="branch-body">Quăng link + 2 nút tĩnh</div>
+        </div>
+        <div class="branch-node node-dead">
+          <div class="branch-label" style="color:#d1d5db;">Ngoài Phạm Vi</div>
+          <div class="branch-body">Câu chặn cố định</div>
+        </div>
+      </div>
+
+      <div class="spacer"></div>
+      <div class="horiz-line"></div>
+      <div class="arrow"></div>
+
+      <!-- Kết quả -->
+      <div class="node node-fail">
+        <div class="node-title">Kết Quả Trả Về <span class="tag tag-gay">GÃY</span></div>
+        <div class="node-body">Link thô + nút tĩnh · Không hiển thị data trực tiếp</div>
+      </div>
+
+      <div class="arrow"></div>
+
+      <!-- User tự làm -->
+      <div class="node node-warn">
+        <div class="node-title">Người Dùng <span class="tag tag-gay">GÃY</span></div>
+        <div class="node-body">Tự click ra web · tự điền lại từ đầu</div>
+      </div>
+
+      <div class="arrow"></div>
+
+      <!-- Điểm gãy chi tiết -->
+      <div class="fail-list">
+        <div class="fail-item">Hỏi lịch bay → quăng link <em>.../flightschedule</em>, không lọc theo giờ</div>
+        <div class="fail-item">Hỏi delay → ép nhập mã chuyến hoặc mã đặt chỗ mới xử lý</div>
+        <div class="fail-item">Hỏi nghiệp vụ sâu (đào Tết) → hotline chữ thô, không trích KB</div>
+        <div class="fail-item">Chưa xong việc → đòi vote 5⭐ chiếm màn hình</div>
+        <div class="fail-item">Cần hoàn vé / khiếu nại → chỉ số 1900 + email, không có nút</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════ TO-BE ══════════════ -->
+  <div class="panel panel-tobe">
+    <div class="panel-heading">To-Be — Đề xuất</div>
+    <div class="panel-desc">Trợ lý trong app: tra cứu trực tiếp hoặc chuyển người đúng lúc</div>
+
+    <div class="flow">
+
+      <!-- User -->
+      <div class="node node-user">
+        <div class="node-title">Người Dùng</div>
+        <div class="node-body">Hỏi lịch bay / trạng thái / khiếu nại / hoàn vé</div>
+      </div>
+
+      <div class="arrow"></div>
+
+      <!-- System -->
+      <div class="node node-system">
+        <div class="node-title">Hệ Thống</div>
+        <div class="node-body">Trích xuất intent + thực thể (chặng, giờ, ngày) + độ nhạy cảm</div>
+      </div>
+
+      <div class="arrow"></div>
+
+      <!-- Horizontal spread -->
+      <div class="horiz-line"></div>
+      <div class="spacer"></div>
+
+      <!-- 3 branches -->
+      <div class="branch-row branch-row-3">
+        <div class="branch-node node-ok">
+          <div class="branch-label" style="color:#86efac;">Tra Cứu</div>
+          <div class="branch-body">API lịch bay / trạng thái trực tiếp</div>
+        </div>
+        <div class="branch-node node-warn">
+          <div class="branch-label" style="color:#fde68a;">Thiếu Thông Tin</div>
+          <div class="branch-body">Cards chọn nhanh [A] [B]</div>
+        </div>
+        <div class="branch-node node-fail">
+          <div class="branch-label" style="color:#fca5a5;">Nhạy Cảm</div>
+          <div class="branch-body">Handoff ngay</div>
+        </div>
+      </div>
+
+      <div class="spacer"></div>
+      <div class="horiz-line"></div>
+      <div class="arrow"></div>
+
+      <!-- Trả lời -->
+      <div class="node node-fix">
+        <div class="node-title">Trả Lời <span class="tag tag-sua">SỬA</span></div>
+        <div class="node-body">Cards tương tác + tag nguồn bấm được + nút [Mở màn hình X]</div>
+      </div>
+
+      <div class="arrow"></div>
+
+      <!-- Handoff -->
+      <div class="node node-fix">
+        <div class="node-title">Handoff <span class="tag tag-sua">SỬA</span></div>
+        <div class="node-body">[Gọi ngay] · [Chat CSKH] · [Gửi ticket]</div>
+      </div>
+
+      <div class="arrow"></div>
+
+      <!-- Cải thiện bổ sung -->
+      <div class="fail-list">
+        <div class="fix-item">Rating chỉ hiện sau khi user bấm "Đã tìm thấy" hoặc kết thúc phiên</div>
+        <div class="fix-item">Link lỗi → thử lại / mở browser ngoài / chuyển CSKH</div>
+        <div class="fix-item">Sửa "Không đúng" → ghi log (intent 1 → intent 2) để cải thiện model</div>
+        <div class="fix-item">Sai ≥ 2 lần → tự động chuyển nhân viên hỗ trợ <span class="tag tag-sua">SỬA</span></div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /.panels -->
+
+</body>
+</html>
