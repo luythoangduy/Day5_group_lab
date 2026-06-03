@@ -99,22 +99,29 @@ AI có thể tạo lịch nhắc sai,
 hậu quả là uống thiếu liều hoặc quá liều.
 Prototype xử lý bằng: (1) review screen bắt buộc, (2) highlight low-confidence,
 (3) rule cảnh báo nếu frequency không khớp pattern thường gặp, (4) không Lưu khi còn field đỏ.
-Owner test: Nguyễn Hoàng Minh — case đơn mẫu cố ý sai tần suất.
+Owner kiểm thử path này là **Hoàng Khương Duy** (research · validate failure trên đơn mẫu).
 ```
 
 ---
 
 ## 8. Owner plan — Day 06
 
-| Thành viên | Việc | Artifact trong repo |
+**Nhóm:** _(điền tên nhóm nếu có)_  
+**Thành viên:** Nguyễn Hoàng Minh · Lương Quốc Dũng · Hoàng Khương Duy · Cù Tiến Nam
+
+Chia đều 4 phần — mỗi người ~25% scope, nộp artifact rõ trong repo.
+
+| Thành viên | Phụ trách chính | Artifact / deliverable |
 |---|---|---|
-| Nguyễn Hoàng Minh | Research / evidence / đơn mẫu | `evidence-pack-prescription.md`, `evidence/` |
-| _(tên)_ | SPEC | `thin-spec-prescription.md` |
-| _(tên)_ | Prototype | `prototype/` — upload, review, schedule, cards |
-| _(tên)_ | OCR + parse pipeline | API key env example; fallback `fixtures/sample-rx.json` |
-| _(tên)_ | Drug DB + cards | `prototype/data/drugs.json` (3–5 thuốc) |
-| Nguyễn Hoàng Minh | Test failure path | Script: sai `3 lần` → phải warn/block |
-| _(tên)_ | Demo | `demo-script.md` 3–5 phút |
+| **Nguyễn Hoàng Minh** | Backend · OCR + AI parse | `prototype/server/` (OpenAI Vision, VietOCR optional), `fixtures/`, `js/parse.js`, `js/api.js`, `.env.example` |
+| **Lương Quốc Dũng** | Frontend · UX prototype | `prototype/index.html`, `css/styles.css`, `js/app.js` — upload, review, lịch, thẻ thuốc; mobile polish |
+| **Hoàng Khương Duy** | Research · evidence · QA | `evidence-pack-prescription.md`, `evidence/` (ảnh đơn đã che PHI), phỏng vấn/review store, test failure path (preset risky + ảnh thật) |
+| **Cù Tiến Nam** | SPEC · nội dung thuốc · demo | `thin-spec-prescription.md`, `synthesis-decide-prescription.md`, `data/drugs.json`, `demo-script.md`, README nộp bài |
+
+**Phối hợp nhanh:**
+- Dũng + Minh: wire upload ảnh → `/api/parse-rx` → review screen
+- Nam + Duy: drug card copy khớp tên thuốc trên đơn mẫu thật
+- Cả nhóm: chạy `demo-script.md` 1 lần trước khi nộp
 
 ---
 
