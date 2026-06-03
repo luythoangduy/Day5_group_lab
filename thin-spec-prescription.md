@@ -28,11 +28,15 @@ Bản cam kết Day 06 — track đổi từ V-AI (archived: `thin-spec-v-ai.md`
 ## 3. Pain statement
 
 ```text
-Người bệnh sau khám đang gặp khó ở bước chuyển đơn thuốc thành lịch uống hàng ngày,
-vì phải đọc chữ trên đơn, tự gõ giờ/liều vào app hoặc calendar, dễ sai (vd. 3 lần/ngày → 1 lần),
-dẫn tới quên uống, uống sai giờ, hoặc không hiểu thuốc để uống an toàn.
-Bằng chứng chính: self-use gõ tay ~10–15 phút cho 3 thuốc; OCR thử cần sửa tần suất;
-quan sát phải Google từng tên thuốc để hiểu công dụng.
+Người bệnh (hoặc người nhà) sau khi khám đang gặp khó ở bước chuyển tiếp từ đơn thuốc giấy/PDF sang lịch uống thực tế hàng ngày,
+vì việc tự đọc chữ và gõ thủ công từng tên thuốc, liều lượng, giờ giấc vào điện thoại rất tốn thời gian (~10-15 phút cho đơn 3 thuốc) và dễ nhập sai tần suất/liều lượng, đồng thời các app nhắc thuốc hiện tại chưa hỗ trợ quét đơn tiếng Việt và không giải thích rõ công dụng thuốc,
+dẫn tới hậu quả người bệnh dễ uống sai liều gây rủi ro sức khỏe, quên lịch, hoặc hoang mang không hiểu rõ công dụng của các loại thuốc được kê.
+Bằng chứng chính: 
+- Trải nghiệm tự gõ đơn 3 thuốc mất 10-15 phút;
+- OCR thử nghiệm cho thấy tỉ lệ nhận diện tần suất tiếng Việt (như "sau ăn", "3 lần/ngày") bị sai lệch cần sửa tay;
+- Đánh giá trên CH Play của Medisafe/MyTherapy phàn nàn việc bắt buộc nhập tay quá phức tạp;
+- Quan sát người dùng phải Google từng tên biệt dược khó nhớ để tự tìm hiểu công dụng.
+
 ```
 
 ---
@@ -94,12 +98,15 @@ và xử lý OCR/parse sai bằng bắt buộc user xác nhận trước khi Lư
 ## 7. Failure mode nguy hiểm nhất
 
 ```text
-Nếu user upload đơn và OCR/parse sai tần suất hoặc liều (vd. 3 lần → 1 lần),
-AI có thể tạo lịch nhắc sai,
-hậu quả là uống thiếu liều hoặc quá liều.
-Prototype xử lý bằng: (1) review screen bắt buộc, (2) highlight low-confidence,
-(3) rule cảnh báo nếu frequency không khớp pattern thường gặp, (4) không Lưu khi còn field đỏ.
-Owner kiểm thử path này là **Hoàng Khương Duy** (research · validate failure trên đơn mẫu).
+Nếu user upload ảnh đơn thuốc có chất lượng kém (mờ, nghiêng, thiếu sáng) dẫn đến AI OCR/parse sai tần suất uống hoặc liều dùng (ví dụ: "uống 3 lần/ngày" thành "1 lần/ngày", hoặc "2 viên" thành "1 viên"),
+AI có thể tự động tạo lịch nhắc uống thuốc sai lệch,
+hậu quả là người bệnh uống thiếu liều (giảm hiệu quả điều trị) hoặc quá liều (rủi ro ngộ độc hoặc tác dụng phụ nguy hiểm).
+Prototype sẽ xử lý bằng cơ chế phòng hộ nhiều lớp:
+1. [UX Split-Screen]: Màn hình Review bắt buộc hiển thị song song ảnh chụp gốc (được crop và phóng to vùng chữ tương ứng) ngay bên cạnh form kết quả để user dễ đối chiếu bằng mắt.
+2. [Confidence Guardrail]: Highlight đỏ các trường thông tin có độ tự tin (confidence score) thấp từ LLM, bắt buộc user phải chạm vào để xác nhận hoặc sửa thì mới kích hoạt nút "Lưu".
+3. [Clinical Rule Validation]: Kiểm tra chéo dữ liệu đầu ra với danh mục thuốc an toàn (nếu tần suất > 4 lần/ngày hoặc liều lượng vượt ngưỡng bình thường của thuốc đó, hệ thống sẽ hiển thị cảnh báo popup: "Liều lượng thuốc này có vẻ bất thường, vui lòng kiểm tra kỹ đơn gốc").
+4. [Hard Block]: Không cho phép lưu vào lịch nhắc nếu còn trường thông tin bị cảnh báo đỏ chưa được xác nhận hoặc sửa đổi.
+Owner test: **Hoàng Khương Duy** — chuẩn bị 1 đơn mẫu cố ý làm mờ chữ tần suất uống để kiểm thử xem hệ thống có kích hoạt cảnh báo đỏ và chặn lưu hay không.
 ```
 
 ---
