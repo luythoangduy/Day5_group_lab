@@ -1,0 +1,22 @@
+{
+  "source": "fixture-failure-demo",
+  "raw_text_preview": "Demo OCR đọc sai: 3 lần/ngày → 1 lần/ngày",
+  "lines": [
+    {
+      "drug_name": "Amoxicillin 500mg",
+      "dose_per_time": "1 viên",
+      "frequency_per_day": 1,
+      "meal_relation": "sau ăn",
+      "duration_days": 7,
+      "confidence": { "drug_name": 0.9, "frequency": 0.55, "dose": 0.88 }
+    },
+    {
+      "drug_name": "Cetirizine 10mg",
+      "dose_per_time": "1 viên",
+      "frequency_per_day": 1,
+      "meal_relation": "tối",
+      "duration_days": 5,
+      "confidence": { "drug_name": 0.87, "frequency": 0.9, "dose": 0.85 }
+    }
+  ]
+}

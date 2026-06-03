@@ -1,0 +1,42 @@
+[
+  {
+    "id": "amoxicillin-500",
+    "names": ["amoxicillin", "amoxicilin", "amoxil", "augmentin"],
+    "display": "Amoxicillin 500mg",
+    "summary": "Kháng sinh diệt vi khuẩn. Dùng theo đơn, uống đủ liều đủ ngày.",
+    "how_to_take": "Uống với nước. Thường sau ăn nếu bác sĩ dặn.",
+    "warnings": ["Không tự ngưng sớm", "Báo bác sĩ nếu dị ứng mẩn ngứa"]
+  },
+  {
+    "id": "paracetamol-500",
+    "names": ["paracetamol", "acetaminophen", "panadol", "efferalgan", "tatanol"],
+    "display": "Paracetamol 500mg",
+    "summary": "Giảm đau, hạ sốt. Không dùng quá liều tối đa trong ngày.",
+    "how_to_take": "Uống khi sốt/đau. Cách các lần uống ít nhất 4–6 giờ nếu dùng nhiều lần.",
+    "warnings": ["Không vượt liều tối đa/ngày theo đơn", "Cẩn thận nếu đang uống thuốc cúm có paracetamol"]
+  },
+  {
+    "id": "omeprazole-20",
+    "names": ["omeprazole", "omeprazol", "losec", "mopral"],
+    "display": "Omeprazole 20mg",
+    "summary": "Giảm acid dạ dày. Thường uống trước ăn sáng.",
+    "how_to_take": "Uống trước bữa ăn 15–30 phút nếu bác sĩ dặn trước ăn.",
+    "warnings": ["Không nhai/vỡ viên bao tan chậm"]
+  },
+  {
+    "id": "vitamin-c-500",
+    "names": ["vitamin c", "ascorbic", "cee", "vicasol"],
+    "display": "Vitamin C 500mg",
+    "summary": "Bổ sung vitamin C theo đơn.",
+    "how_to_take": "Uống sau ăn nếu dạ dày nhạy.",
+    "warnings": ["Không thay thế bữa ăn đầy đủ"]
+  },
+  {
+    "id": "cetirizine-10",
+    "names": ["cetirizine", "cetrizine", "zyrtec", "agiz"],
+    "display": "Cetirizine 10mg",
+    "summary": "Giảm dị ứng, hắt hơi, ngứa.",
+    "how_to_take": "Có thể gây buồn ngủ — tránh lái xe nếu mệt.",
+    "warnings": ["Không uống thêm rượu bia"]
+  }
+]

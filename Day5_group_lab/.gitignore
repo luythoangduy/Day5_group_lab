@@ -1,0 +1,11 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Prototype secrets
+prototype/.env
+prototype/.env.local
+prototype/server/.env
+prototype/server/node_modules/
