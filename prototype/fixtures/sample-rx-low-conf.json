@@ -1,0 +1,22 @@
+{
+  "source": "fixture-low-confidence",
+  "raw_text_preview": "OCR không chắc tần suất dòng 1",
+  "lines": [
+    {
+      "drug_name": "Amoxicillin 500mg",
+      "dose_per_time": "1 viên",
+      "frequency_per_day": 2,
+      "meal_relation": "sau ăn",
+      "duration_days": 7,
+      "confidence": { "drug_name": 0.94, "frequency": 0.52, "dose": 0.85 }
+    },
+    {
+      "drug_name": "Vitamin C 500mg",
+      "dose_per_time": "1 viên",
+      "frequency_per_day": 1,
+      "meal_relation": "sau ăn",
+      "duration_days": 10,
+      "confidence": { "drug_name": 0.88, "frequency": 0.9, "dose": 0.86 }
+    }
+  ]
+}
