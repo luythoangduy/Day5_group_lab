@@ -19,11 +19,11 @@
 
 | Observation | Evidences | Path liên quan | Điều học được |
 |---|---|---|---|
-| Sau khám, user phải **đọc chữ viết tay / thuật ngữ** trên đơn và **tự gõ** giờ uống vào calendar hoặc app nhắc như app MyTherapy | <img src=".\evidences\MyTherapy.jpg" alt="Mô tả ảnh" width="100" /> | — (pain gốc) | Pain không phải “thiếu chatbot” mà **thiếu chuyển đơn → hành động** |
-| User không biết thuốc mới kê **là gì, uống lúc nào, tránh gì** — phải Google từng tên | <img src=".\evidences\google_search.jpg" alt="Mô tả ảnh" width="100" /> | Happy (nếu có thẻ thuốc) | Cần **drug card** song song lịch, không chỉ OCR |
-| V-App (sáng): hỏi nhắc uống thuốc → hướng dẫn app **ngoài** (Long Châu), không deep-link Vinmec/V-App | <img src=".\evidences\vapp_screenshot.jpg" alt="Mô tả ảnh" width="100" /> | Failure | Analog: super-app chưa đóng loop **đơn → lịch in-app** |
-| OCR thử trên 1 ảnh đơn in: nhận diện tên thuốc ~OK, **tần suất** (`sau ăn`, `3 lần/ngày`) cần sửa tay | <img src=".\evidences\gpt.png" alt="Mô tả ảnh" width="100" /> | Low-confidence / Correction | **Review screen bắt buộc** trước lưu lịch |
-| Thông tin caution cần được có nguồn trích dẫn rõ ràng | <img src=".\evidences\gpt.png" alt="Mô tả ảnh" width="100" /> | Thiếu reference đáng tin cậy | **Cần có reference link** khi đính kèm caution |
+| Sau khám, user phải **đọc chữ viết tay / thuật ngữ** trên đơn và **tự gõ** giờ uống vào calendar hoặc app nhắc như app MyTherapy | <img src="../evidences/MyTherapy.jpg" alt="Mô tả ảnh" width="100" /> | — (pain gốc) | Pain không phải “thiếu chatbot” mà **thiếu chuyển đơn → hành động** |
+| User không biết thuốc mới kê **là gì, uống lúc nào, tránh gì** — phải Google từng tên | <img src="../evidences/google_search.jpg" alt="Mô tả ảnh" width="100" /> | Happy (nếu có thẻ thuốc) | Cần **drug card** song song lịch, không chỉ OCR |
+| V-App (sáng): hỏi nhắc uống thuốc → hướng dẫn app **ngoài** (Long Châu), không deep-link Vinmec/V-App | <img src="../evidences/vapp_screenshot.jpg" alt="Mô tả ảnh" width="100" /> | Failure | Analog: super-app chưa đóng loop **đơn → lịch in-app** |
+| OCR thử trên 1 ảnh đơn in: nhận diện tên thuốc ~OK, **tần suất** (`sau ăn`, `3 lần/ngày`) cần sửa tay | <img src="../evidences/gpt.png" alt="Mô tả ảnh" width="100" /> | Low-confidence / Correction | **Review screen bắt buộc** trước lưu lịch |
+| Thông tin caution cần được có nguồn trích dẫn rõ ràng | <img src="../evidences/gpt.png" alt="Mô tả ảnh" width="100" /> | Thiếu reference đáng tin cậy | **Cần có reference link** khi đính kèm caution |
 
 ---
 
@@ -31,7 +31,7 @@
 
 | Quote / review / observation | Nguồn | User là ai? | Pain/failure mode |
 |---|---|---|---|
-| Google Play crawl MyTherapy: app có **5,000,000+ installs**, rating ~**4.55/5**, review mới nhắc nhiều tới reminders, alarms, add/enter meds, dose/dosage, refill tracking; app mạnh ở nhắc lịch sau khi user đã khai báo thuốc | `google-play-scraper` crawl app `eu.smartpatient.mytherapy` — output: [evidences/mytherapy_google_play_evidence.xlsx](evidences/mytherapy_google_play_evidence.xlsx) | Bệnh nhân mãn tính / người cần uống thuốc đều | Reminder có nhu cầu thật; friction nằm ở bước **biến đơn thuốc thành lịch** trước khi reminder chạy |
+| Google Play crawl MyTherapy: app có **5,000,000+ installs**, rating ~**4.55/5**, review mới nhắc nhiều tới reminders, alarms, add/enter meds, dose/dosage, refill tracking; app mạnh ở nhắc lịch sau khi user đã khai báo thuốc | `google-play-scraper` crawl app `eu.smartpatient.mytherapy` — output: [../evidences/mytherapy_google_play_evidence.xlsx](../evidences/mytherapy_google_play_evidence.xlsx) | Bệnh nhân mãn tính / người cần uống thuốc đều | Reminder có nhu cầu thật; friction nằm ở bước **biến đơn thuốc thành lịch** trước khi reminder chạy |
 | “Không hiểu đơn bác sĩ viết” | Pattern phổ biến BV công (analog) | Người cao tuổi / người nhà | Literacy + handwriting (out of scope v1) |
 | Vinmec / app BV: có đơn điện tử nhưng **chưa thấy** 1 nút “tạo lịch uống từ đơn” trong self-use | Giả định từ teardown V-App + quan sát | User Vinmec | Opportunity in-ecosystem |
 
