@@ -117,15 +117,24 @@ app.post("/api/drugs-lookup", async (req, res) => {
     const names = Array.isArray(req.body?.drugs) ? req.body.drugs : [];
     if (!names.length) return res.status(400).json({ error: "Thiếu mảng drugs" });
 
+    const fast = Boolean(req.body?.fast);
     const results = {};
-    for (const name of names) {
-      const trimmed = String(name).trim();
-      if (!trimmed) continue;
-      try {
-        results[trimmed] = await lookupDrugInfo(openai, trimmed);
-      } catch (e) {
-        results[trimmed] = { error: e.message };
-      }
+    const concurrency = 2;
+    for (let i = 0; i < names.length; i += concurrency) {
+      const chunk = names.slice(i, i + concurrency);
+      await Promise.all(
+        chunk.map(async (name) => {
+          const trimmed = String(name).trim();
+          if (!trimmed) return;
+          try {
+            results[trimmed] = await lookupDrugInfo(openai, trimmed, {
+              skipCitations: fast,
+            });
+          } catch (e) {
+            results[trimmed] = { error: e.message };
+          }
+        })
+      );
     }
     res.json({ results });
   } catch (err) {

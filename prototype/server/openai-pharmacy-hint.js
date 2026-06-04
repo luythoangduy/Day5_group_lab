@@ -3,6 +3,8 @@
  * Chỉ: câu hỏi nên hỏi dược sĩ, từ khóa tìm Maps, lưu ý thuốc kê đơn.
  */
 
+import { parseModelJson } from "./parse-model-json.js";
+
 const cache = new Map();
 
 export async function pharmacyHint(client, drugName, displayName) {
@@ -35,7 +37,7 @@ Schema:
     temperature: 0.3,
   });
 
-  const raw = JSON.parse(completion.choices[0].message.content);
+  const raw = parseModelJson(completion.choices[0].message.content, "Pharmacy hint");
   const result = {
     maps_search_query: String(raw.maps_search_query || `nhà thuốc ${drugName}`).trim(),
     ask_pharmacist: Array.isArray(raw.ask_pharmacist) ? raw.ask_pharmacist.map(String) : [],
