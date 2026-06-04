@@ -24,6 +24,7 @@
 | V-App (sáng): hỏi nhắc uống thuốc → hướng dẫn app **ngoài** (Long Châu), không deep-link Vinmec/V-App | <img src="../evidences/vapp_screenshot.jpg" alt="Mô tả ảnh" width="100" /> | Failure | Analog: super-app chưa đóng loop **đơn → lịch in-app** |
 | OCR thử trên 1 ảnh đơn in: nhận diện tên thuốc ~OK, **tần suất** (`sau ăn`, `3 lần/ngày`) cần sửa tay | <img src="../evidences/gpt.png" alt="Mô tả ảnh" width="100" /> | Low-confidence / Correction | **Review screen bắt buộc** trước lưu lịch |
 | Thông tin caution cần được có nguồn trích dẫn rõ ràng | <img src="../evidences/gpt.png" alt="Mô tả ảnh" width="100" /> | Thiếu reference đáng tin cậy | **Cần có reference link** khi đính kèm caution |
+| Đối chiếu thuốc với danh mục nhà nước giúp người dùng tin tưởng hơn vào thông tin AI cung cấp | Crawl QĐ 403/QĐ-QLD 2026 — Cục Quản lý Dược (dav.gov.vn) | Người bệnh cần xác nhận thuốc được cấp phép hợp lệ | **MOH registry badge** trên thẻ thuốc — xanh nếu khớp danh mục, vàng nếu chưa thấy |
 
 ---
 

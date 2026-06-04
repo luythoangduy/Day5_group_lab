@@ -60,7 +60,8 @@ và xử lý OCR/parse sai bằng bắt buộc user xác nhận trước khi Lư
 | 4 | **Review screen** — edit từng field, highlight low-confidence |
 | 5 | **Schedule generator** — `N lần/ngày` → time slots (vd. 8h, 14h, 21h); `sau ăn` → label |
 | 6 | **Drug cards** — match tên → 3–5 thuốc trong `drugs.json` (mô tả, cách uống, lưu ý) |
-| 7 | Demo script 4 paths |
+| 7 | **MOH registry check** — đối chiếu tên/hoạt chất/số đăng ký với danh mục QĐ 403/QĐ-QLD 2026 (Bộ Y tế); hiển thị badge trạng thái lưu hành trên thẻ thuốc |
+| 8 | Demo script 4 paths |
 
 ### Out of scope Day 06
 
@@ -106,6 +107,7 @@ Prototype sẽ xử lý bằng cơ chế phòng hộ nhiều lớp:
 2. [Confidence Guardrail]: Field `frequency` có confidence thấp được gắn badge cảnh báo vàng để user kiểm tra lại.
 3. [Rule Validation]: Chặn tần suất ngoài khoảng 1–4 lần/ngày; riêng demo risky có rule Amoxicillin 1 lần/ngày trong nhiều ngày → cảnh báo đỏ.
 4. [Hard Block]: Nút "Lưu & đồng bộ lịch" bị disable nếu còn cảnh báo đỏ.
+5. [MOH Registry Trust]: Thẻ thuốc hiển thị badge đối chiếu danh mục Bộ Y tế (QĐ 403/QĐ-QLD 2026); thuốc không khớp hoặc chưa kiểm tra được hiển thị badge cảnh báo vàng để người dùng biết mức độ xác thực.
 Owner test: **Hoàng Khương Duy** — chuẩn bị 1 đơn mẫu cố ý làm mờ chữ tần suất uống để kiểm thử xem hệ thống có kích hoạt cảnh báo đỏ và chặn lưu hay không.
 ```
 

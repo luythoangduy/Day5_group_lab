@@ -552,46 +552,46 @@ function sourceBadge(source) {
 }
 
 function registryBadge(registry) {
-  if (!registry) return '<span class="chip-registry chip-registry-pending">Dang kiem tra Bo Y te</span>';
-  if (registry.unavailable) return '<span class="chip-registry chip-registry-warn">Chua bat server</span>';
-  if (registry.licensed) return '<span class="chip-registry chip-registry-ok">Bo Y te: tim thay</span>';
-  return '<span class="chip-registry chip-registry-warn">Chua thay trong QD 403</span>';
+  if (!registry) return '<span class="chip-registry chip-registry-pending">Đang kiểm tra Bộ Y tế</span>';
+  if (registry.unavailable) return '<span class="chip-registry chip-registry-warn">Chưa kết nối server</span>';
+  if (registry.licensed) return '<span class="chip-registry chip-registry-ok">Bộ Y tế: đã tìm thấy</span>';
+  return '<span class="chip-registry chip-registry-warn">Chưa thấy trong QĐ 403</span>';
 }
 
 function renderRegistryHtml(registry) {
   if (!registry) {
     return `
       <div class="registry-box registry-pending">
-        <strong>Dang kiem tra luu hanh</strong>
-        <p>Ung dung dang doi chieu voi danh muc Bo Y te da crawl.</p>
+        <strong>Đang kiểm tra lưu hành</strong>
+        <p>Ứng dụng đang đối chiếu với danh mục Bộ Y tế đã crawl.</p>
       </div>`;
   }
   if (registry.unavailable) {
     return `
       <div class="registry-box registry-warn">
-        <strong>Chua kiem tra duoc danh muc Bo Y te</strong>
-        <p>Can chay Node server de tra du lieu QD 403/QD-QLD.</p>
+        <strong>Chưa kiểm tra được danh mục Bộ Y tế</strong>
+        <p>Cần chạy Node server để tra dữ liệu QĐ 403/QĐ-QLD.</p>
       </div>`;
   }
   if (!registry.licensed) {
     return `
       <div class="registry-box registry-warn">
-        <strong>Chua thay trong danh muc da crawl</strong>
-        <p>Khong tim thay ten/hoat chat/so dang ky khop trong ${esc(registry.source || "QD 403/QD-QLD")}.</p>
+        <strong>Chưa thấy trong danh mục đã crawl</strong>
+        <p>Không tìm thấy tên/hoạt chất/số đăng ký khớp trong ${esc(registry.source || "QĐ 403/QĐ-QLD")}.</p>
       </div>`;
   }
 
   const first = registry.matches?.[0];
   return `
     <div class="registry-box registry-ok">
-      <strong>Da tim thay trong danh muc Bo Y te</strong>
-      <p>${esc(registry.source || "QD 403/QD-QLD")}</p>
+      <strong>Đã tìm thấy trong danh mục Bộ Y tế</strong>
+      <p>${esc(registry.source || "QĐ 403/QĐ-QLD")}</p>
       ${first ? `
         <dl class="registry-match">
-          <dt>Ten trong danh muc</dt><dd>${esc(first.medicine_name)}</dd>
-          <dt>So dang ky</dt><dd>${esc(first.registration_number)}</dd>
-          <dt>Quyet dinh</dt><dd>${esc(first.decision)}</dd>
-          <dt>Phu luc</dt><dd>${esc(first.appendix)}</dd>
+          <dt>Tên trong danh mục</dt><dd>${esc(first.medicine_name)}</dd>
+          <dt>Số đăng ký</dt><dd>${esc(first.registration_number)}</dd>
+          <dt>Quyết định</dt><dd>${esc(first.decision)}</dd>
+          <dt>Phụ lục</dt><dd>${esc(first.appendix)}</dd>
           <dt>Trang PDF</dt><dd>${esc(first.page)}</dd>
         </dl>
       ` : ""}

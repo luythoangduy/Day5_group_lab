@@ -18,9 +18,9 @@
 1. Màn **Quét đơn thuốc** → tab **Demo** → chọn **"Đơn chuẩn"** → **Tải mẫu**
 2. Màn **Review** — 3 thuốc, không sửa → **Lưu lịch uống**
 3. Màn **Lịch** — chỉ 8h / 14h / 21h, "sau ăn"
-4. Màn **Thẻ thuốc** — chạm từng thuốc, đọc 1 câu mô tả
+4. Màn **Thẻ thuốc** — chạm từng thuốc, đọc 1 câu mô tả; chú ý badge **"Bộ Y tế: đã tìm thấy"** (xanh) hoặc trạng thái kiểm tra đang chạy
 
-**Nói:** "AI chỉ là bản nháp; lịch chỉ có sau khi bấm Lưu."
+**Nói:** "AI chỉ là bản nháp; lịch chỉ có sau khi bấm Lưu. Mỗi thẻ thuốc được đối chiếu với danh mục lưu hành QĐ 403/QĐ-QLD 2026 của Bộ Y tế."
 
 ---
 

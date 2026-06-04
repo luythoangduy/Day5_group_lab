@@ -15,8 +15,8 @@ Gom theo **workflow/pain**, không gom theo tên feature.
 | **Đơn → hành động:** phải tự gõ lịch từ đơn, mất ~10–15 phút, dễ sai tần suất | Self-use gõ 3 thuốc; review app nhắc thuốc (nhập tay) |
 | **Hiểu thuốc:** không biết tên trên đơn nghĩa gì, phải Google từng món | Self-use search; thiếu drug card in-app |
 | **OCR ≠ lịch:** nhận chữ được nhưng chưa parse `3 lần/ngày`, `sau ăn` | Self-use OCR thử; Google Lens analog |
-
 | **Trust / rủi ro:** sai liều hoặc tần suất → uống sai | Failure path; Auto/Aug → augmentation + confirm |
+| **Tin cậy thông tin thuốc:** người dùng không biết thuốc có được cấp phép chính thức không | Crawl QĐ 403/QĐ-QLD 2026 Bộ Y tế; hiển thị badge xác minh lưu hành trên thẻ thuốc |
 
 **Không gom theo:** “OCR”, “LLM”, “push notification” — đó là giải pháp, chưa phải pain.
 
@@ -81,11 +81,11 @@ không Lưu calendar nếu chưa confirm.
 ## 6. Câu chốt cuối (trước khi rời lớp / trước Day 06)
 
 ```text
-Dựa trên [self-use gõ lịch ~10–15 phút + OCR thử cần sửa tần suất + gap V-App + MyTherapy Google Play crawl],
-nhóm sẽ build [upload đơn → OCR/parse → review → lịch uống + drug card],
+Dựa trên [self-use gõ lịch ~10–15 phút + OCR thử cần sửa tần suất + gap V-App + MyTherapy Google Play crawl + crawl danh mục QĐ 403/QĐ-QLD 2026 Bộ Y tế],
+nhóm sẽ build [upload đơn → OCR/parse → review → lịch uống + drug card + badge xác minh lưu hành],
 cho [người bệnh hoặc người nhà sau khám, đơn in/digital 2–5 thuốc],
-để giải quyết [chuyển đơn thành lịch uống đúng mà không gõ tay và không đoán liều],
-bằng cách AI [trích xuất + gợi ý lịch và mô tả thuốc — user xác nhận trước Lưu],
+để giải quyết [chuyển đơn thành lịch uống đúng mà không gõ tay, không đoán liều, và có cơ sở tin tưởng thuốc hợp lệ],
+bằng cách AI [trích xuất + gợi ý lịch và mô tả thuốc — user xác nhận trước Lưu; đồng thời đối chiếu thuốc với danh mục nhà nước],
 và sẽ test failure path [OCR/parse sai tần suất 3→1 lần/ngày — warn hoặc block nếu không sửa].
 ```
 
