@@ -1,0 +1,66 @@
+[
+  {
+    "id": "amoxicillin-500",
+    "names": ["amoxicillin", "amoxicilin", "amoxil", "augmentin"],
+    "display": "Amoxicillin 500mg",
+    "summary": "Kháng sinh diệt vi khuẩn. Dùng theo đơn, uống đủ liều đủ ngày.",
+    "how_to_take": "Uống với nước. Thường sau ăn nếu bác sĩ dặn.",
+    "warnings": ["Không tự ngưng sớm", "Báo bác sĩ nếu dị ứng mẩn ngứa"]
+  },
+  {
+    "id": "paracetamol-500",
+    "names": ["paracetamol", "acetaminophen", "panadol", "efferalgan", "tatanol"],
+    "display": "Paracetamol 500mg",
+    "summary": "Giảm đau, hạ sốt. Không dùng quá liều tối đa trong ngày.",
+    "how_to_take": "Uống khi sốt/đau. Cách các lần uống ít nhất 4–6 giờ.",
+    "warnings": ["Không vượt liều tối đa/ngày theo đơn"]
+  },
+  {
+    "id": "concor-5",
+    "names": ["concor", "bisoprolol", "bisoprolol fumarate"],
+    "display": "Concor (Bisoprolol) 5mg",
+    "summary": "Thuốc tim mạch — chẹn beta, thường dùng cao huyết áp hoặc suy tim, làm chậm nhịp tim.",
+    "how_to_take": "Uống buổi sáng, có thể trước hoặc sau ăn theo đơn. Không ngưng đột ngột.",
+    "warnings": ["Theo dõi mạch khi đứng dậy", "Báo bác sĩ nếu chóng mặt, khó thở"]
+  },
+  {
+    "id": "verospiron-25",
+    "names": ["verospiron", "spironolactone", "aldactone"],
+    "display": "Verospiron (Spironolactone) 25mg",
+    "summary": "Lợi tiểu giữ kali — thường dùng phù, tăng huyết áp hoặc theo chỉ định tim thận.",
+    "how_to_take": "Uống theo đơn, thường sau ăn để giảm khó chịu dạ dày.",
+    "warnings": ["Tránh bổ sung kali tự ý", "Báo bác sĩ nếu chuột rút, yếu"]
+  },
+  {
+    "id": "insusact",
+    "names": ["insusact", "insulin aspart", "novorapid", "fiasp"],
+    "display": "Insusact (Insulin aspart)",
+    "summary": "Insulin tác dụng nhanh — điều trị đái tháo đường, tiêm theo chỉ định bác sĩ.",
+    "how_to_take": "Tiêm dưới da đúng giờ, theo liều và cách bác sĩ/dược sĩ hướng dẫn.",
+    "warnings": ["Nguy cơ hạ đường huyết — luôn mang đường", "Bảo quản lạnh đúng cách"]
+  },
+  {
+    "id": "omeprazole-20",
+    "names": ["omeprazole", "omeprazol", "losec", "mopral"],
+    "display": "Omeprazole 20mg",
+    "summary": "Giảm acid dạ dày. Thường uống trước ăn sáng.",
+    "how_to_take": "Uống trước bữa ăn 15–30 phút.",
+    "warnings": ["Không nhai viên bao tan chậm"]
+  },
+  {
+    "id": "vitamin-c-500",
+    "names": ["vitamin c", "ascorbic", "cee"],
+    "display": "Vitamin C 500mg",
+    "summary": "Bổ sung vitamin C theo đơn.",
+    "how_to_take": "Uống sau ăn nếu dạ dày nhạy.",
+    "warnings": []
+  },
+  {
+    "id": "cetirizine-10",
+    "names": ["cetirizine", "zyrtec"],
+    "display": "Cetirizine 10mg",
+    "summary": "Giảm dị ứng, hắt hơi, ngứa.",
+    "how_to_take": "Có thể gây buồn ngờ — cẩn thận khi lái xe.",
+    "warnings": ["Không uống rượu bia"]
+  }
+]
