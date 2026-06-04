@@ -1,5 +1,7 @@
+import "./patch-fetch-json.js";
 import "dotenv/config";
 import express from "express";
+import { isFetchJsonPatched } from "./patch-fetch-json.js";
 import cors from "cors";
 import multer from "multer";
 import path from "path";
@@ -46,7 +48,18 @@ app.get("/api/health", async (_req, res) => {
     drug_lookup: true,
     nearby_places: true,
     pharmacy_hint: Boolean(openai),
+    citations_safe: isFetchJsonPatched(),
+    build: "2026-06-04-citations-v2",
   });
+});
+
+process.on("unhandledRejection", (reason) => {
+  const msg = String(reason?.message || reason || "");
+  if (msg.includes("<!DOCTYPE") || msg.includes("Expected JSON but received HTML")) {
+    console.warn("[API] Mạng/proxy trả HTML thay JSON — kiểm tra VPN/proxy hoặc OPENAI_API_KEY");
+    return;
+  }
+  console.error("unhandledRejection:", reason);
 });
 
 app.get("/api/nearby", async (req, res) => {
