@@ -1,13 +1,13 @@
-# Technical Design — MediLịch MVP
-**Phiên bản:** 1.1  
+# Thiết kế kỹ thuật — MediLịch MVP
+**Phiên bản:** 1.2  
 **Ngày:** 2026-06-04  
 **Dựa trên:** PRD-MediLich-MVP.md
 
 ---
 
-## 1. Recommended Approach
+## 1. Phương án đề xuất
 
-**Giữ nguyên stack hiện tại — tập trung polish & risk mitigation.**
+**Giữ nguyên stack hiện tại — tập trung polish & xử lý rủi ro.**
 
 Prototype đã hoạt động với đầy đủ tính năng MVP. Thay vì refactor, ưu tiên:
 1. Đảm bảo demo không crash
@@ -16,7 +16,7 @@ Prototype đã hoạt động với đầy đủ tính năng MVP. Thay vì refac
 
 ---
 
-## 2. System Architecture
+## 2. Kiến trúc hệ thống
 
 ### 2.1 Tổng quan hệ thống
 
@@ -26,7 +26,7 @@ Prototype đã hoạt động với đầy đủ tính năng MVP. Thay vì refac
 │                                                             │
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  │
 │  │  app.js  │  │ drugs.js │  │nearby.js │  │calendar  │  │
-│  │(orchestr)│  │(tra thuốc│  │(UI map)  │  │-ui.js    │  │
+│  │(điều phối│  │(tra thuốc│  │(UI bản đồ│  │-ui.js    │  │
 │  └────┬─────┘  └────┬─────┘  └────┬─────┘  └──────────┘  │
 │       │              │              │                        │
 │  ┌────▼──────────────▼──────────────▼───────────────────┐  │
@@ -36,20 +36,22 @@ Prototype đã hoạt động với đầy đủ tính năng MVP. Thay vì refac
 └─────────────────────────────┼───────────────────────────────┘
                               │
 ┌─────────────────────────────┼───────────────────────────────┐
-│              SERVER (Node.js + Express :3000)               │
+│              SERVER (Node.js + Express :3000, ESM)          │
 │                             │                               │
 │  ┌──────────────────────────▼────────────────────────────┐ │
 │  │                    index.js (Router)                   │ │
 │  │  GET  /api/health        POST /api/parse-rx            │ │
 │  │  POST /api/drug-info     POST /api/drugs-lookup        │ │
-│  │  GET  /api/nearby        POST /api/pharmacy-hint       │ │
+│  │  GET  /api/nearby        GET  /api/citations           │ │
+│  │  POST /api/pharmacy-hint                              │ │
 │  └──┬───────────┬───────────┬──────────────┬─────────────┘ │
 │     │           │           │              │               │
-│  ┌──▼──┐  ┌────▼────┐  ┌───▼──────┐  ┌───▼──────────┐   │
-│  │parse│  │drug.js  │  │nearby    │  │pharmacy-hint │   │
-│  │.js  │  │+citations│  │-places.js│  │.js           │   │
-│  └──┬──┘  └────┬────┘  └───┬──────┘  └──────────────┘   │
-│     │           │           │                              │
+│  ┌──▼──────┐ ┌──▼──────┐ ┌──▼──────────┐ ┌▼─────────────┐│
+│  │openai   │ │openai   │ │nearby-      │ │citation-     ││
+│  │-parse.js│ │-drug.js │ │places.js    │ │lookup.js     ││
+│  └──┬──────┘ └──┬──────┘ └──┬──────────┘ │+ pharmacy-   ││
+│     │           │           │             │hint.js       ││
+│     │           │           │             └──────────────┘│
 └─────┼───────────┼───────────┼──────────────────────────────┘
       │           │           │
       ▼           ▼           ▼
@@ -65,9 +67,9 @@ Prototype đã hoạt động với đầy đủ tính năng MVP. Thay vì refac
              └─────────────────┘
 ```
 
-### 2.2 Alternative Options (Đã loại)
+### 2.2 Phương án khác (Đã loại bỏ)
 
-| Option | Lý do loại |
+| Phương án | Lý do loại |
 |---|---|
 | React / Next.js | Over-engineer cho hackathon, mất thời gian migrate |
 | React Native | Cần build native, không kịp hackathon |
@@ -76,7 +78,7 @@ Prototype đã hoạt động với đầy đủ tính năng MVP. Thay vì refac
 
 ---
 
-## 3. Project Setup
+## 3. Thiết lập dự án
 
 ### Yêu cầu môi trường
 
@@ -94,30 +96,34 @@ Day5_group_lab/
 │   ├── PRD-MediLich-MVP.md
 │   └── TechDesign-MediLich-MVP.md
 └── prototype/
-    ├── index.html              ← SPA entry point
-    ├── css/styles.css          ← Material Design styles
+    ├── index.html              ← SPA entry point (Android shell)
+    ├── css/styles.css          ← Material Design 3 styles
     ├── js/
-    │   ├── app.js              ← Orchestrator chính
-    │   ├── api.js              ← HTTP client → backend
+    │   ├── app.js              ← Điều phối toàn bộ ứng dụng
+    │   ├── api.js              ← HTTP client gọi backend
     │   ├── parse.js            ← Validate/normalize đơn thuốc
     │   ├── schedule.js         ← Tạo lịch nhắc từ đơn
-    │   ├── drugs.js            ← Tra thuốc (local + AI)
-    │   ├── nearby.js           ← UI tìm nhà thuốc
-    │   ├── calendar-ui.js      ← Lịch tháng
-    │   ├── reminders.js        ← Logic nhắc nhở
-    │   ├── citations-ui.js     ← Render citations
-    │   └── drug-citations.js   ← Xử lý citations data
-    ├── data/drugs.json         ← Database thuốc local
-    ├── fixtures/               ← Demo offline (3 preset)
+    │   ├── reminders.js        ← Logic nhắc nhở (hôm nay, tiếp theo)
+    │   ├── drugs.js            ← Tra thuốc (local DB + AI cache)
+    │   ├── nearby.js           ← UI tìm nhà thuốc (Overpass)
+    │   ├── calendar-ui.js      ← Lịch tháng + đồng bộ đơn↔nhắc
+    │   ├── citations-ui.js     ← Render citations HTML
+    │   └── drug-citations.js   ← Gắn citations vào thẻ thuốc
+    ├── data/drugs.json         ← Database thuốc local (offline)
+    ├── fixtures/               ← 3 preset demo offline
     └── server/
-        ├── index.js            ← Express server
-        ├── openai-parse.js     ← Vision → JSON đơn thuốc
-        ├── openai-drug.js      ← Tra thông tin thuốc AI
-        ├── openai-pharmacy-hint.js
-        ├── nearby-places.js    ← Overpass OSM
-        ├── citations.js        ← Enrich citations
+        ├── index.js            ← Express server (ESM)
+        ├── openai-parse.js     ← Vision / Text → JSON đơn thuốc
+        ├── openai-drug.js      ← Tra thông tin thuốc qua AI
+        ├── openai-pharmacy-hint.js ← Gợi ý mua thuốc
+        ├── nearby-places.js    ← Query Overpass OSM
+        ├── citation-lookup.js  ← Tra cứu citation Vinmec thật
+        ├── fetch-json-safe.js  ← Fetch JSON có kiểm tra HTML/proxy
+        ├── patch-fetch-json.js ← Patch fetch JSON an toàn cho OpenAI SDK
+        ├── parse-model-json.js ← Parse JSON từ model response
         ├── vietocr-client.js   ← VietOCR sidecar client
         ├── vietocr_service.py  ← Flask VietOCR (tùy chọn)
+        ├── package.json        ← "type": "module", openai ^4.77.0
         └── .env                ← API keys (không commit)
 ```
 
@@ -139,12 +145,12 @@ npm start
 
 ---
 
-## 4. Data Flow Diagrams
+## 4. Sơ đồ luồng dữ liệu
 
-### 4.1 Scan Đơn Thuốc (F1 — Core Feature)
+### 4.1 Scan đơn thuốc (F1 — Tính năng cốt lõi)
 
 ```
-USER                  CLIENT                    SERVER              OPENAI
+NGƯỜI DÙNG            CLIENT                    SERVER              OPENAI
  │                      │                          │                   │
  │  Chọn / chụp ảnh     │                          │                   │
  ├─────────────────────▶│                          │                   │
@@ -155,7 +161,7 @@ USER                  CLIENT                    SERVER              OPENAI
  │                      │                          │──────────────────▶│
  │                      │                          │  (timeout 2s)     │
  │                      │                          │                   │
- │                      │              [OCR_MODE=auto, VietOCR OFF]    │
+ │                      │         [OCR_MODE=auto, VietOCR tắt]        │
  │                      │                          │                   │
  │                      │                          │  Vision API call  │
  │                      │                          │  image_url:base64 │
@@ -169,11 +175,11 @@ USER                  CLIENT                    SERVER              OPENAI
  │                      │    parse_model, raw_text}│                   │
  │                      │◀─────────────────────────┤                   │
  │                      │                          │                   │
- │  Hiển thị review     │                          │                   │
+ │  Hiển thị xác nhận   │                          │                   │
  │◀─────────────────────┤                          │                   │
 ```
 
-### 4.2 Tra Thông Tin Thuốc (F4 — Drug Cards)
+### 4.2 Tra thông tin thuốc (F4 — Thẻ thuốc)
 
 ```
 CLIENT                        SERVER                    OPENAI
@@ -183,8 +189,9 @@ CLIENT                        SERVER                    OPENAI
   │    "Paracetamol"] }          │                         │
   ├─────────────────────────────▶│                         │
   │                              │                         │
-  │                              │  Check cache (Map)      │
-  │                              │  → cache miss           │
+  │                              │  lookupDrugInfo()       │
+  │                              │  (local DB trước, AI   │
+  │                              │   cho thuốc chưa có)   │
   │                              │                         │
   │                              │  Chat completion        │
   │                              ├────────────────────────▶│
@@ -193,23 +200,21 @@ CLIENT                        SERVER                    OPENAI
   │                              │    warnings, citations} │
   │                              │◀────────────────────────┤
   │                              │                         │
-  │                              │  enrichCitations()      │
-  │                              │  → thêm URL thật        │
-  │                              │                         │
-  │                              │  cache.set(drugName)    │
+  │                              │  lookupCitations()      │
+  │                              │  → nguồn Vinmec thật    │
   │                              │                         │
   │  { results: { ... } }        │                         │
   │◀─────────────────────────────┤                         │
   │                              │                         │
-  │  [Lần 2 — cache hit]         │                         │
-  │  POST /api/drug-info         │                         │
+  │  [Lần 2 — client aiCache]    │                         │
+  │  không gọi API lại           │                         │
   ├─────────────────────────────▶│                         │
-  │                              │  cache.get() → hit ✓   │
-  │  { ...drug, cached: true }   │  Không gọi OpenAI      │
+  │                              │  nếu gọi lại: parse mới│
+  │  drugs.js ưu tiên aiCache    │  không gọi lại OpenAI  │
   │◀─────────────────────────────┤                         │
 ```
 
-### 4.3 Tìm Nhà Thuốc Gần (F7)
+### 4.3 Tìm nhà thuốc gần (F7)
 
 ```
 CLIENT                    SERVER                OVERPASS OSM
@@ -237,26 +242,26 @@ CLIENT                    SERVER                OVERPASS OSM
   │◀─────────────────────────┤                       │
 ```
 
-### 4.4 State Machine — App Flow
+### 4.4 Máy trạng thái — Luồng ứng dụng
 
 ```
                     ┌──────────────┐
-                    │  SCAN FLOW   │◀──────────────────┐
+                    │  LUỒNG SCAN  │◀──────────────────┐
                     │  (onboarding)│                   │
                     └──────┬───────┘                   │
                            │                     btn-scan-fab-nav
                     ┌──────▼───────┐                   │
-                    │  Step 1:     │                   │
+                    │  Bước 1:     │                   │
                     │  Upload/Demo │                   │
                     └──────┬───────┘                   │
                            │ onAnalyze()               │
                     ┌──────▼───────┐                   │
-                    │  Step 2:     │                   │
-                    │  Review      │                   │
+                    │  Bước 2:     │                   │
+                    │  Xác nhận    │                   │
                     └──────┬───────┘                   │
                            │ onSaveAndSync()            │
                     ┌──────▼───────────────────────────┤
-                    │         MAIN APP                 │
+                    │         ỨNG DỤNG CHÍNH           │
                     │  ┌────────────────────────────┐  │
                     │  │  Tab: HOME (Nhắc)          │  │
                     │  │  Tab: CALENDAR (Lịch)      │  │
@@ -267,19 +272,21 @@ CLIENT                    SERVER                OVERPASS OSM
 
 ---
 
-## 5. Feature Implementation
+## 5. Chi tiết tính năng
 
 ### F1 — Scan đơn thuốc
 ```
-Upload ảnh
-    → multer (memoryStorage, max 12MB)
+Upload ảnh (image/*, max 12MB)
+    → multer memoryStorage
     → pingVietOCR() [timeout 2s]
-    → [auto] OpenAI Vision: parseFromImage()
-           model: gpt-4o-mini
+    → nếu OCR_MODE=auto và VietOCR bật: ocrWithVietOCR() → parseFromText()
+    → nếu không: OpenAI Vision parseFromImage()
+           model: OPENAI_VISION_MODEL || gpt-4o-mini
            detail: "high"
-           response_format: json_object
     → normalizeLines() clamp validation
-    → { lines[], ocr_engine, parse_model }
+    → reviewDrugNames() sửa lỗi OCR tên thuốc (so sánh token)
+    → orientationError() trả 422 nếu ảnh xoay/nghiêng/khó đọc
+    → { lines[], ocr_engine, parse_model, raw_text }
 ```
 
 ### F2 — Xác nhận & chỉnh sửa
@@ -287,7 +294,7 @@ Upload ảnh
 renderReview()
     → HTML inputs cho mỗi rxLine
     → validateLines() real-time
-    → badges danger/warn
+    → badge danger/warn theo confidence
     → btn-save disabled nếu hasBlockingIssues()
 ```
 
@@ -301,31 +308,37 @@ buildSchedule(rxLines)
     → sessionStorage.setItem()
 ```
 
-Phân bổ giờ uống:
+Phân bổ giờ uống mặc định:
 ```
 1 lần/ngày  → ["08:00"]
 2 lần/ngày  → ["08:00", "20:00"]
-3 lần/ngày  → ["08:00", "13:00", "20:00"]
-4 lần/ngày  → ["08:00", "12:00", "17:00", "21:00"]
+3 lần/ngày  → ["08:00", "14:00", "21:00"]
+4 lần/ngày  → ["07:00", "12:00", "17:00", "22:00"]
+```
+
+Nhắc nhở trên màn hình Home:
+```
+getNextReminder()   → nhắc gần nhất chưa uống
+getTodayEvents()    → danh sách hôm nay
+btn "Đã uống"       → thêm vào takenIds
+btn "Nhắc lại 10p"  → editingReminderId + countdown
 ```
 
 ### F4 — Thẻ thuốc + Citations
 ```
 fetchDrugsBatchAI(names)
     → POST /api/drugs-lookup
-    → cache check → openai-drug.js
-    → enrichCitations():
-        drugbank  → drugbank.com/drugs/...
-        pubmed    → pubmed.ncbi.nlm.nih.gov/...
-        byt       → moh.gov.vn
-        who       → who.int
-        fda       → fda.gov
+    → drugs.js kiểm tra aiCache trước (key: normalizeName)
+    → local DB (data/drugs.json) match trước
+    → thuốc chưa có mới gọi openai-drug.js
+    → citation-lookup.js chỉ trả nguồn Vinmec có kết quả lookup thật
+    → UI attachCitations() tải citation bổ sung khi mở thẻ thuốc
 ```
 
 ### F5 — Demo offline
 ```
 fixtures/
-    sample-rx-happy.json     → Đơn chuẩn 3 thuốc
+    sample-rx-happy.json     → Đơn chuẩn 3 thuốc (happy path)
     sample-rx-low-conf.json  → Tần suất mờ (confidence thấp)
     sample-rx-risky.json     → Sai liều (trigger danger badge)
 ```
@@ -343,22 +356,23 @@ renderCalendarGrid(grid, year, month, schedule, selected, onSelect)
 ```
 navigator.geolocation.getCurrentPosition()
     → GET /api/nearby?lat=&lng=&radius=2500
-    → findNearbyPlaces() Overpass query
+    → findNearbyPlaces() Overpass query (bán kính max 8000m)
+    → sắp xếp theo khoảng cách haversine
     → render danh sách + link Google Maps
 ```
 
 ### F8 — Giả lập thông báo
 ```
 showNotif(body, title)
-    → toast.classList.add("show")
+    → notif-toast.classList.add("show")
     → setTimeout remove after 4000ms
 ```
 
 ---
 
-## 6. Database & Storage
+## 6. Cơ sở dữ liệu & Lưu trữ
 
-### sessionStorage Schema
+### Schema sessionStorage
 
 ```json
 {
@@ -401,65 +415,66 @@ showNotif(body, title)
 - Không cần setup database
 - Reset sạch sau mỗi tab mới — tiện khi demo nhiều lần
 
-**Upgrade path (v2):**
+**Lộ trình nâng cấp (v2):**
 ```
 sessionStorage → localStorage → IndexedDB → Supabase
 ```
 
-### In-memory cache (Server)
+### Cache in-memory (Client)
 ```javascript
-const cache = new Map()
-// key: drug_name.toLowerCase()
+const aiCache = new Map()
+// key: normalizeName(drug_name)
 // value: { display, summary, warnings, citations, source }
-// TTL: sống theo process (restart = clear)
+// TTL: sống theo tab/session JS (refresh = clear)
 ```
 
 ---
 
-## 7. AI Assistance Strategy
+## 7. Chiến lược AI
 
-### OCR Pipeline
+### Pipeline OCR
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│                    OCR DECISION TREE                     │
+│                    SƠ ĐỒ QUYẾT ĐỊNH OCR                 │
 │                                                          │
 │  Upload ảnh                                             │
 │      │                                                  │
 │      ▼                                                  │
-│  OCR_MODE == "vietocr"? ─── Yes ──▶ VietOCR (bắt buộc)│
-│      │ No                                               │
+│  OCR_MODE == "vietocr"? ─── Có ──▶ VietOCR (bắt buộc)  │
+│      │ Không                                            │
 │      ▼                                                  │
 │  OCR_MODE == "auto"?                                    │
-│      │ Yes                                              │
+│      │ Có                                               │
 │      ▼                                                  │
-│  pingVietOCR() OK? ─── Yes ──▶ VietOCR + parseFromText │
-│      │ No                                               │
+│  pingVietOCR() OK? ─── Có ──▶ VietOCR + parseFromText  │
+│      │ Không                                            │
 │      ▼                                                  │
 │  OpenAI Vision (parseFromImage)                         │
 └──────────────────────────────────────────────────────────┘
 ```
 
-### Prompt Strategy
+### Chiến lược prompt
 
-| Feature | Temperature | Lý do |
+| Tính năng | Temperature | Lý do |
 |---|---|---|
 | OCR parse | 0.1 | Cần deterministic, ít sáng tạo |
-| Drug info | 0.2 | Cần chính xác, chút linh hoạt cho diễn đạt |
-| Pharmacy hint | 0.3 | Gợi ý mang tính tự nhiên hơn |
+| Thông tin thuốc | 0.2 | Cần chính xác, chút linh hoạt cho diễn đạt |
+| Gợi ý nhà thuốc | 0.3 | Gợi ý mang tính tự nhiên hơn |
 
-### AI Safety Guardrails
+### Kiểm soát an toàn AI
 ```
 System prompt bắt buộc:
 ✅ Không chẩn đoán bệnh
 ✅ Không thay thế bác sĩ / dược sĩ
 ✅ Citations chỉ dùng key cố định (không bịa URL)
 ✅ Disclaimer "Xác nhận với bác sĩ" trong warnings
+✅ reviewDrugNames() chỉ sửa lỗi OCR rõ ràng, không đổi thuốc
 ```
 
 ---
 
-## 8. Deployment Plan
+## 8. Kế hoạch triển khai
 
 ### Demo Hackathon (Localhost)
 
@@ -478,42 +493,42 @@ System prompt bắt buộc:
 ### Checklist trước demo
 
 ```
-[ ] .env có OPENAI_API_KEY hợp lệ
+[ ] server/.env có OPENAI_API_KEY hợp lệ
 [ ] npm start thành công → status pill: "AI OK"
 [ ] Test scan 1 ảnh đơn thật → kết quả < 30s
 [ ] Demo mode (fixture "Đơn chuẩn") hoạt động offline
 [ ] Không có lỗi console đỏ
-[ ] Test màn hình 390px (mobile view)
+[ ] Test màn hình 390px (mobile view Chrome DevTools)
 [ ] Pin laptop > 50% hoặc cắm sạc
 [ ] Có ảnh đơn thuốc thật để demo
 ```
 
 ---
 
-## 9. Cost Breakdown
+## 9. Chi phí ước tính
 
-### API Costs (ước tính per demo session)
+### Chi phí API (ước tính mỗi phiên demo)
 
-| Call | Model | Token ước tính | Chi phí |
+| Lần gọi | Model | Token ước tính | Chi phí |
 |---|---|---|---|
 | Parse đơn (vision) | gpt-4o-mini | ~800 tokens | ~$0.001 |
 | Tra 3-5 thuốc | gpt-4o-mini | ~500 tokens/thuốc | ~$0.003 |
-| Pharmacy hint | gpt-4o-mini | ~300 tokens | ~$0.0005 |
+| Gợi ý nhà thuốc | gpt-4o-mini | ~300 tokens | ~$0.0005 |
 | **Tổng 1 demo** | | | **< $0.01** |
 | **10 lần demo** | | | **< $0.10** |
 
-### Infrastructure
+### Hạ tầng
 ```
 Localhost:    $0
 Overpass OSM: $0  (miễn phí, public good)
-VietOCR:      $0  (self-hosted)
+VietOCR:      $0  (tự host)
 ─────────────────
 Tổng hạ tầng: $0/tháng
 ```
 
 ---
 
-## 10. Risk Mitigation
+## 10. Xử lý rủi ro
 
 ### Rủi ro 1: API chậm / timeout
 
@@ -524,7 +539,7 @@ Giải pháp:
 ┌────────────────────────────────────────────────────┐
 │  Client-side:                                      │
 │  → setLoading(true, "AI đang đọc đơn…")           │
-│  → AbortController timeout 30s                    │
+│  → Loading overlay + spinner trong lúc chờ        │
 │  → Alert thân thiện: "Thử lại hoặc dùng Demo"     │
 │                                                    │
 │  Fallback:                                         │
@@ -533,7 +548,7 @@ Giải pháp:
 └────────────────────────────────────────────────────┘
 ```
 
-### Rủi ro 2: UI vỡ layout
+### Rủi ro 2: Giao diện vỡ layout
 
 ```
 Vấn đề: Giao diện lỗi trên màn hình khác kích thước
@@ -542,7 +557,8 @@ Giải pháp:
 ┌────────────────────────────────────────────────────┐
 │  → .phone-shell max-width: 430px (cố định)        │
 │  → reflowShell() sau mỗi tab switch               │
-│  → Google Fonts + system-ui fallback              │
+│  → Google Fonts (Roboto + Be Vietnam Pro)         │
+│     + system-ui fallback                          │
 │  → Test Chrome DevTools 390px trước demo          │
 └────────────────────────────────────────────────────┘
 ```
@@ -554,16 +570,29 @@ Vấn đề: Không kết nối được trong lúc demo
 
 Giải pháp:
 ┌────────────────────────────────────────────────────┐
-│  → Demo mode: fixture không cần API               │
+│  → Demo mode: 3 fixture không cần API              │
 │  → data/drugs.json: local DB không cần server     │
 │  → Banner "Chỉ demo" khi detect không có key      │
 │  → Chuẩn bị demo trên fixture trước, scan sau    │
 └────────────────────────────────────────────────────┘
 ```
 
+### Rủi ro 4: Ảnh xoay / nghiêng
+
+```
+Vấn đề: Ảnh đơn thuốc bị xoay, AI không đọc được
+
+Giải pháp:
+┌────────────────────────────────────────────────────┐
+│  → orientationError() kiểm tra document_quality  │
+│  → Trả HTTP 422 + message hướng dẫn cụ thể       │
+│  → Client hiển thị alert: xoay ảnh rồi thử lại   │
+└────────────────────────────────────────────────────┘
+```
+
 ---
 
-## 11. Scaling Path (Post-hackathon)
+## 11. Lộ trình mở rộng (Sau hackathon)
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -574,14 +603,14 @@ Giải pháp:
                         │
                         ▼
 ┌─────────────────────────────────────────────────────┐
-│  V1 — PWA Installable                              │
+│  V1 — PWA Cài được                                 │
 │  localStorage + Service Worker offline cache       │
 │  Deploy: Railway / Render (free tier)              │
 └──────────────────────┬──────────────────────────────┘
                         │
                         ▼
 ┌─────────────────────────────────────────────────────┐
-│  V2 — Multi-device                                 │
+│  V2 — Đa thiết bị                                  │
 │  Supabase (auth + Postgres) + React frontend       │
 │  React Native app (iOS + Android)                  │
 │  Push notification thật                            │
@@ -589,17 +618,17 @@ Giải pháp:
                         │
                         ▼
 ┌─────────────────────────────────────────────────────┐
-│  V3 — Enterprise                                   │
+│  V3 — Doanh nghiệp                                 │
 │  Tích hợp HIS bệnh viện                           │
 │  Quản lý gia đình (nhiều người dùng)               │
 │  Teleconsult với dược sĩ                           │
 └─────────────────────────────────────────────────────┘
 ```
 
-### Limitations hiện tại
+### Giới hạn hiện tại
 - Dữ liệu mất khi đóng tab (sessionStorage)
 - Không có auth — không phân biệt người dùng
-- Không push notification thật (chỉ giả lập)
+- Không push notification thật (chỉ giả lập toast)
 - VietOCR cần chạy thủ công trên máy local
 - Overpass OSM có thể chậm giờ cao điểm
 - In-memory drug cache reset khi restart server

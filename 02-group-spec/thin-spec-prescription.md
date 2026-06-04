@@ -54,9 +54,9 @@ và xử lý OCR/parse sai bằng bắt buộc user xác nhận trước khi Lư
 
 | # | Feature |
 |---|---|
-| 1 | Upload ảnh / chọn file PDF đơn mẫu (2–3 test cases) |
-| 2 | OCR (Vision API hoặc mock JSON cho demo fallback) |
-| 3 | LLM/rule **parse → JSON** per line: `name`, `dose`, `frequency`, `meal`, `days` |
+| 1 | Upload/chụp ảnh đơn hoặc screenshot đơn mẫu (3 test cases fixture) |
+| 2 | OCR (OpenAI Vision; VietOCR tùy chọn; fixture JSON cho demo fallback) |
+| 3 | LLM/rule **parse → JSON** per line: `drug_name`, `dose_per_time`, `frequency_per_day`, `meal_relation`, `duration_days` |
 | 4 | **Review screen** — edit từng field, highlight low-confidence |
 | 5 | **Schedule generator** — `N lần/ngày` → time slots (vd. 8h, 14h, 21h); `sau ăn` → label |
 | 6 | **Drug cards** — match tên → 3–5 thuốc trong `drugs.json` (mô tả, cách uống, lưu ý) |
@@ -68,7 +68,7 @@ và xử lý OCR/parse sai bằng bắt buộc user xác nhận trước khi Lư
 - Google/iOS Calendar sync  
 - Full drug database / interaction checker  
 - `cách ngày`, `khi cần`, refill  
-- Tích hợp Vinmec API thật  
+- Tích hợp HIS/Vinmec API thật (hiện chỉ lookup citation Vinmec công khai khi có kết quả khớp)  
 
 ---
 
@@ -102,10 +102,10 @@ Nếu user upload ảnh đơn thuốc có chất lượng kém (mờ, nghiêng, 
 AI có thể tự động tạo lịch nhắc uống thuốc sai lệch,
 hậu quả là người bệnh uống thiếu liều (giảm hiệu quả điều trị) hoặc quá liều (rủi ro ngộ độc hoặc tác dụng phụ nguy hiểm).
 Prototype sẽ xử lý bằng cơ chế phòng hộ nhiều lớp:
-1. [UX Split-Screen]: Màn hình Review bắt buộc hiển thị song song ảnh chụp gốc (được crop và phóng to vùng chữ tương ứng) ngay bên cạnh form kết quả để user dễ đối chiếu bằng mắt.
-2. [Confidence Guardrail]: Highlight đỏ các trường thông tin có độ tự tin (confidence score) thấp từ LLM, bắt buộc user phải chạm vào để xác nhận hoặc sửa thì mới kích hoạt nút "Lưu".
-3. [Clinical Rule Validation]: Kiểm tra chéo dữ liệu đầu ra với danh mục thuốc an toàn (nếu tần suất > 4 lần/ngày hoặc liều lượng vượt ngưỡng bình thường của thuốc đó, hệ thống sẽ hiển thị cảnh báo popup: "Liều lượng thuốc này có vẻ bất thường, vui lòng kiểm tra kỹ đơn gốc").
-4. [Hard Block]: Không cho phép lưu vào lịch nhắc nếu còn trường thông tin bị cảnh báo đỏ chưa được xác nhận hoặc sửa đổi.
+1. [Review bắt buộc]: Màn hình Review hiển thị từng dòng thuốc dưới dạng input để user sửa trước khi lưu; nếu có `raw_text` thì hiện preview OCR.
+2. [Confidence Guardrail]: Field `frequency` có confidence thấp được gắn badge cảnh báo vàng để user kiểm tra lại.
+3. [Rule Validation]: Chặn tần suất ngoài khoảng 1–4 lần/ngày; riêng demo risky có rule Amoxicillin 1 lần/ngày trong nhiều ngày → cảnh báo đỏ.
+4. [Hard Block]: Nút "Lưu & đồng bộ lịch" bị disable nếu còn cảnh báo đỏ.
 Owner test: **Hoàng Khương Duy** — chuẩn bị 1 đơn mẫu cố ý làm mờ chữ tần suất uống để kiểm thử xem hệ thống có kích hoạt cảnh báo đỏ và chặn lưu hay không.
 ```
 
@@ -149,11 +149,13 @@ Chia đều 4 phần — mỗi người ~25% scope, nộp artifact rõ trong rep
 **Per schedule event:**
 ```json
 {
+  "date": "2026-06-04",
+  "time": "08:00",
+  "drug_name": "Amoxicillin 500mg",
   "drug_id": "amoxicillin-500",
-  "times": ["08:00", "14:00", "21:00"],
-  "label": "Sau ăn",
-  "start_date": "2026-06-04",
-  "end_date": "2026-06-10"
+  "dose": "1 viên",
+  "meal": "sau ăn",
+  "label": "Amoxicillin 500mg — 1 viên"
 }
 ```
 
@@ -163,10 +165,10 @@ Chia đều 4 phần — mỗi người ~25% scope, nộp artifact rõ trong rep
 
 | Layer | Gợi ý |
 |---|---|
-| OCR | Google Cloud Vision / Azure Document Intelligence |
-| Parse | LLM + JSON schema (Vietnamese Rx) |
-| App | React/Next hoặc Flutter — 1 flow 4 màn: Upload → Review → Schedule → Cards |
-| Demo fallback | `fixtures/sample-rx.json` nếu API fail live |
+| OCR | OpenAI Vision; VietOCR sidecar tùy chọn |
+| Parse | OpenAI parse JSON + normalize/review tên thuốc |
+| App | Vanilla JS ES Modules + Node/Express backend |
+| Demo fallback | `fixtures/sample-rx-happy.json`, `sample-rx-low-conf.json`, `sample-rx-risky.json` nếu API fail live |
 
 ---
 

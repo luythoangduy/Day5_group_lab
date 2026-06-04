@@ -12,6 +12,9 @@ Folder này được chia theo đúng việc cần làm:
 |---|---|
 | `01-invidual-workshop/app-teardown.md` | Bài mổ app AI thật: dùng thử, vẽ flow, tìm path yếu, viết finding thành quyết định product. |
 | `02-group-spec/` | Bộ template cho phần nhóm: gom bằng chứng, chuyển evidence thành insight/opportunity/build slice, và viết thin SPEC cuối Day 05. |
+| `docs/` | PRD và Technical Design của MediLịch MVP, đã khớp với prototype hiện tại. |
+| `prototype/` | Web prototype MediLịch: frontend tĩnh + Node/Express backend cho OpenAI, VietOCR tùy chọn, citations Vinmec và tìm nhà thuốc gần. |
+| `prototype/server/` | Backend chạy demo tại `http://localhost:3000`; giữ `OPENAI_API_KEY` trong `.env`. |
 
 ## Cấu trúc repo nộp bài Day 06
 

@@ -58,7 +58,7 @@ VIETOCR_URL=http://127.0.0.1:5001
 
 | Method | Path | Mô tả |
 |--------|------|--------|
-| GET | `/api/health` | `openai`, `vietocr`, `nearby_places` |
+| GET | `/api/health` | Trạng thái `openai`, `vietocr`, `ocr_mode`, `drug_lookup`, `nearby_places`, `pharmacy_hint`, `citations_safe` |
 | POST | `/api/parse-rx` | `multipart/form-data` field `image` |
 | POST | `/api/drug-info` | Tra thuốc AI + citations thật từ Vinmec |
 | GET | `/api/citations?name=` | Chỉ nguồn Vinmec có kết quả tra cứu thật |
@@ -87,7 +87,7 @@ prototype/
 
 ## Demo không có mạng / không key
 
-Tab **Demo mẫu** — vẫn chạy fixtures, không gọi OpenAI.
+Chạy `npm start` trong `prototype/server`, mở app rồi vào tab **Demo** — fixtures vẫn chạy khi thiếu `OPENAI_API_KEY` và không gọi OpenAI.
 
 ## Demo script
 

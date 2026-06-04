@@ -15,7 +15,7 @@
 
 ## 1. Happy path (~1 phút)
 
-1. Màn **Upload** → chọn **"Đơn mẫu — chuẩn"** → **Phân tích đơn**
+1. Màn **Quét đơn thuốc** → tab **Demo** → chọn **"Đơn chuẩn"** → **Tải mẫu**
 2. Màn **Review** — 3 thuốc, không sửa → **Lưu lịch uống**
 3. Màn **Lịch** — chỉ 8h / 14h / 21h, "sau ăn"
 4. Màn **Thẻ thuốc** — chạm từng thuốc, đọc 1 câu mô tả
@@ -26,7 +26,7 @@
 
 ## 2. Low-confidence (~45 giây)
 
-1. Quay **Upload** → **"Đơn — tần suất mờ"**
+1. Bấm nút camera trên app bar để quét đơn mới → tab **Demo** → **"Tần suất mờ"** → **Tải mẫu**
 2. Review: field **Tần suất** màu vàng
 3. Sửa thành `3` lần/ngày → **Lưu**
 
@@ -36,7 +36,7 @@
 
 ## 3. Failure path (~1 phút)
 
-1. **"Đơn — sai liều (demo lỗi)"**
+1. Tab **Demo** → **"Sai liều"** → **Tải mẫu**
 2. Review: `1 lần/ngày` — cảnh báo đỏ
 3. Bấm **Lưu** → **bị chặn**
 4. Sửa thành `3` → Lưu thành công
@@ -63,6 +63,6 @@
 
 ## Checklist trước khi lên sóng
 
-- [ ] `npx serve .` chạy ổn
+- [ ] `cd prototype/server` → `npm start` chạy ổn
 - [ ] 3 preset đều load được
 - [ ] Ảnh đơn thật (đã che thông tin) trong `evidence/` (repo gốc)
