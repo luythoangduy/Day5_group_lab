@@ -25,3 +25,14 @@ export async function parseRxImage(file) {
   }
   return data;
 }
+
+export async function fetchDrugInfo(drugName) {
+  const res = await fetch(`${API_BASE}/api/drug-info`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ drug_name: drugName }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Lỗi tra thuốc (${res.status})`);
+  return data;
+}
