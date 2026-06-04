@@ -58,8 +58,17 @@ VIETOCR_URL=http://127.0.0.1:5001
 
 | Method | Path | Mô tả |
 |--------|------|--------|
-| GET | `/api/health` | `openai`, `vietocr` có sẵn không |
+| GET | `/api/health` | `openai`, `vietocr`, `nearby_places` |
 | POST | `/api/parse-rx` | `multipart/form-data` field `image` |
+| POST | `/api/drug-info` | Tra thuốc AI + **citations** (DrugBank, PubMed, BYT…) |
+| POST | `/api/drugs-lookup` | Batch tra thuốc |
+| GET | `/api/nearby?lat=&lng=` | Nhà thuốc / BV gần (Overpass + User-Agent bắt buộc) |
+| POST | `/api/pharmacy-hint` | AI gợi ý câu hỏi dược sĩ (không khẳng định còn hàng) |
+
+### Thuốc — nguồn & mua gần đây
+
+- Mô tả AI/local kèm **Nguồn tham khảo** (link thật, không để model tự bịa URL).
+- Tab **Thuốc** → chọn thẻ → **Tìm nhà thuốc & bệnh viện gần** (cần quyền vị trí + `npm start`). Không có API tồn kho — user gọi hỏi trước khi đi.
 
 ## Cấu trúc
 

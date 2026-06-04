@@ -13,6 +13,8 @@ import {
   checkDrugApi,
 } from "./drugs.js";
 import { fetchHealth, parseRxImage } from "./api.js";
+import { renderCitationsHtml } from "./citations-ui.js";
+import { mountNearbyBuySection } from "./nearby.js";
 import {
   getTodayEvents,
   getNextReminder,
@@ -458,6 +460,9 @@ function sourceBadge(source) {
 }
 
 function renderDrugDetail(detail, drug, line) {
+  const citationsBlock =
+    drug.source !== "fallback" ? renderCitationsHtml(drug.citations) : "";
+
   detail.innerHTML = `
     <div class="surface-card drug-detail">
       <h3 class="drug-title">${esc(drug.display)} ${sourceBadge(drug.source)}</h3>
@@ -466,6 +471,7 @@ function renderDrugDetail(detail, drug, line) {
       <p class="drug-body">${esc(drug.how_to_take)} · Theo đơn: ${line.frequency_per_day} lần/ngày, ${esc(line.meal_relation)}</p>
       <h4 class="label-sm">Lưu ý</h4>
       <ul class="drug-warnings">${(drug.warnings || []).map((w) => `<li>${esc(w)}</li>`).join("")}</ul>
+      ${citationsBlock}
       ${drug.source === "fallback" ? '<button type="button" class="btn-tonal btn-retry-drug">Tra lại bằng AI</button>' : ""}
     </div>`;
 
@@ -476,6 +482,11 @@ function renderDrugDetail(detail, drug, line) {
     renderDrugDetail(detail, d, line);
     renderDrugCards();
   });
+
+  if (drug.source !== "fallback") {
+    const card = detail.querySelector(".drug-detail");
+    mountNearbyBuySection(card, drug, line);
+  }
 }
 
 function mountDrugCard(list, detail, line, drug) {

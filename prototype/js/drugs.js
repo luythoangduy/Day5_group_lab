@@ -1,7 +1,8 @@
+import { withCitations } from "./drug-citations.js";
+
 let drugDb = [];
 const aiCache = new Map();
 let apiReady = null;
-
 function apiUrl(path) {
   return `${window.location.origin}${path}`;
 }
@@ -59,20 +60,19 @@ export function matchDrug(drugName) {
   for (const drug of drugDb) {
     const displayNorm = normalizeName(drug.display);
     if (norm.includes(displayNorm) || displayNorm.includes(norm)) {
-      return { ...drug, source: "local" };
+      return withCitations({ ...drug, source: "local" });
     }
     for (const alias of drug.names) {
       const a = normalizeName(alias);
       if (norm.includes(a) || a.includes(norm)) {
-        return { ...drug, source: "local" };
+        return withCitations({ ...drug, source: "local" });
       }
       for (const t of tokens) {
         if (t.includes(a) || a.includes(t)) {
-          return { ...drug, source: "local" };
+          return withCitations({ ...drug, source: "local" });
         }
       }
-    }
-  }
+    }  }
   return null;
 }
 
@@ -110,9 +110,9 @@ export async function fetchDrugFromAI(drugName) {
   }
 
   data.source = "openai";
-  aiCache.set(key, data);
-  return data;
-}
+  const enriched = withCitations(data);
+  aiCache.set(key, enriched);
+  return enriched;}
 
 /** Tra nhiều thuốc một lần (ít lỗi hơn) */
 export async function fetchDrugsBatchAI(drugNames) {
@@ -132,8 +132,7 @@ export async function fetchDrugsBatchAI(drugNames) {
 
   for (const [name, info] of Object.entries(data.results || {})) {
     if (info.error) continue;
-    aiCache.set(normalizeName(name), { ...info, source: "openai" });
-  }
+    aiCache.set(normalizeName(name), withCitations({ ...info, source: "openai" }));  }
 }
 
 export async function resolveDrug(drugName, { forceRetry = false } = {}) {
