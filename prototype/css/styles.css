@@ -271,6 +271,10 @@ html, body {
   box-sizing: border-box;
 }
 .scan-frame:active { opacity: 0.9; }
+.scan-frame.dragover {
+  border-color: var(--md-primary);
+  background: var(--md-primary-container);
+}
 .scan-placeholder {
   display: flex;
   flex-direction: column;
@@ -281,6 +285,14 @@ html, body {
 }
 .material-icon { font-size: 2.5rem; }
 .preview-img { width: 100%; max-height: 220px; object-fit: contain; }
+
+.file-input-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
 
 .radio-tile {
   display: flex;
@@ -735,6 +747,75 @@ html, body {
 .chip-local {
   background: var(--md-primary-container);
   color: var(--md-primary);
+}
+.drug-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.chip-registry {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.chip-registry-ok {
+  background: #e6f4ea;
+  color: #137333;
+}
+.chip-registry-warn {
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+.chip-registry-pending {
+  background: var(--md-surface-variant);
+  color: var(--md-on-surface-variant);
+}
+.registry-box {
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+.registry-box strong {
+  display: block;
+  margin-bottom: 4px;
+}
+.registry-ok {
+  background: #e6f4ea;
+  color: #0d652d;
+  border: 1px solid #b7dfc2;
+}
+.registry-warn {
+  background: var(--warn-bg);
+  color: #7a3b00;
+  border: 1px solid #ffd8a8;
+}
+.registry-pending {
+  background: var(--md-surface-variant);
+  color: var(--md-on-surface-variant);
+  border: 1px solid var(--md-outline);
+}
+.registry-match {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 5px 8px;
+  margin-top: 10px;
+}
+.registry-match dt {
+  font-weight: 700;
+  color: inherit;
+}
+.registry-match dd {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .drug-loading {
   padding: 24px;

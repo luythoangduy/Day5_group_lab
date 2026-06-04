@@ -1,5 +1,6 @@
 let drugDb = [];
 const aiCache = new Map();
+const registryCache = new Map();
 let apiReady = null;
 
 function apiUrl(path) {
@@ -19,7 +20,9 @@ export async function checkDrugApi() {
       return false;
     }
     const h = await res.json();
-    apiReady = h.server === "medilich-node" && h.openai === true;
+    apiReady =
+      h.server === "medilich-node" &&
+      (h.drug_lookup === true || h.openai === true || h.gemini === true);
     return apiReady;
   } catch {
     apiReady = false;
@@ -27,9 +30,28 @@ export async function checkDrugApi() {
   }
 }
 
+async function checkServerApi() {
+  try {
+    const res = await fetch(apiUrl("/api/health"));
+    if (!res.ok) return false;
+    const h = await res.json();
+    return h.server === "medilich-node";
+  } catch {
+    return false;
+  }
+}
+
 export async function loadDrugDb() {
-  const res = await fetch("./data/drugs.json");
-  drugDb = await res.json();
+  try {
+    const res = await fetch("./data/drugs.json");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    drugDb = text.trim() ? JSON.parse(text) : [];
+    if (!Array.isArray(drugDb)) drugDb = [];
+  } catch (e) {
+    console.warn("Local drug DB unavailable; continuing with AI lookup only.", e);
+    drugDb = [];
+  }
   return drugDb;
 }
 
@@ -105,7 +127,7 @@ export async function fetchDrugFromAI(drugName) {
   }
 
   if (!data.summary) {
-    throw new Error("OpenAI không trả dữ liệu thuốc");
+    throw new Error("AI không trả dữ liệu thuốc");
   }
 
   data.source = "openai";
@@ -132,6 +154,46 @@ export async function fetchDrugsBatchAI(drugNames) {
     if (info.error) continue;
     aiCache.set(normalizeName(name), { ...info, source: "openai" });
   }
+}
+
+export async function fetchMohRegistryBatch(drugNames) {
+  const names = [...new Set(drugNames.map((n) => String(n || "").trim()).filter(Boolean))];
+  const need = names.filter((name) => !registryCache.has(normalizeName(name)));
+  if (!need.length) return;
+
+  const hasServer = await checkServerApi();
+  if (!hasServer) {
+    for (const name of need) {
+      registryCache.set(normalizeName(name), {
+        query: name,
+        licensed: false,
+        unavailable: true,
+        matches: [],
+      });
+    }
+    return;
+  }
+
+  const res = await fetch(apiUrl("/api/moh-registry-check"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ drugs: need, limit: 3 }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "MOH registry lookup failed");
+
+  for (const name of need) {
+    registryCache.set(normalizeName(name), data.results?.[name] || {
+      query: name,
+      licensed: false,
+      matches: [],
+      source: data.source,
+    });
+  }
+}
+
+export function getMohRegistryStatus(drugName) {
+  return registryCache.get(normalizeName(drugName)) || null;
 }
 
 export async function resolveDrug(drugName, { forceRetry = false } = {}) {

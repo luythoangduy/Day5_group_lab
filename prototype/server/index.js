@@ -12,6 +12,7 @@ import { lookupCitations } from "./citation-lookup.js";
 import { pharmacyHint } from "./openai-pharmacy-hint.js";
 import { findNearbyPlaces } from "./nearby-places.js";
 import { ocrWithVietOCR, pingVietOCR } from "./vietocr-client.js";
+import { lookupMohRegistry, lookupMohRegistryBatch, registryStats } from "./moh-registry.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
@@ -48,17 +49,22 @@ function orientationError(norm) {
 
 app.get("/api/health", async (_req, res) => {
   const vietocrUp = await pingVietOCR(VIETOCR_URL);
+  const mohRegistry = registryStats();
+  const provider = (process.env.LLM_PROVIDER || "openai").toLowerCase();
   res.json({
     ok: true,
     server: "medilich-node",
-    openai: Boolean(openai),
+    openai: Boolean(openai) && provider === "openai",
+    gemini: Boolean(openai) && provider === "gemini",
+    llm_provider: provider,
     vietocr: vietocrUp,
     ocr_mode: OCR_MODE,
     drug_lookup: true,
     nearby_places: true,
     pharmacy_hint: Boolean(openai),
     citations_safe: isFetchJsonPatched(),
-    build: "2026-06-04-citations-v2",
+    moh_registry: mohRegistry,
+    build: "2026-06-04-moh-registry-v1",
   });
 });
 
@@ -114,6 +120,33 @@ app.get("/api/citations", async (req, res) => {
   }
 });
 
+app.get("/api/moh-registry", async (req, res) => {
+  try {
+    const query = String(req.query.q || req.query.name || "").trim();
+    if (!query) return res.status(400).json({ error: "Thiếu q hoặc name" });
+    const limit = Math.min(Number(req.query.limit) || 5, 20);
+    res.json(lookupMohRegistry(query, limit));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message || "MOH registry lookup failed" });
+  }
+});
+
+app.post("/api/moh-registry-check", async (req, res) => {
+  try {
+    const names = Array.isArray(req.body?.drugs) ? req.body.drugs : [];
+    if (!names.length) return res.status(400).json({ error: "Thiếu mảng drugs" });
+    const limit = Math.min(Number(req.body?.limit) || 3, 10);
+    res.json({
+      source: registryStats().source,
+      results: lookupMohRegistryBatch(names, limit),
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message || "MOH registry batch lookup failed" });
+  }
+});
+
 app.post("/api/pharmacy-hint", async (req, res) => {
   try {
     if (!openai) {
@@ -161,13 +194,15 @@ app.post("/api/drug-info", async (req, res) => {
     if (!openai) {
       return res.status(503).json({ error: "Thiếu OPENAI_API_KEY" });
     }
-    const name = req.body?.drug_name?.trim();
-    if (!name) return res.status(400).json({ error: "Thiếu drug_name" });
-    const info = await lookupDrugInfo(openai, name);
-    res.json(info);
+    const drug_name = String(req.body?.drug_name || "").trim();
+    const display = String(req.body?.display || drug_name).trim();
+    if (!drug_name) return res.status(400).json({ error: "Thiếu drug_name" });
+
+    const hint = await pharmacyHint(openai, drug_name, display);
+    res.json(hint);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message || "Drug lookup failed" });
+    res.status(500).json({ error: err.message || "Pharmacy hint failed" });
   }
 });
 
@@ -191,6 +226,14 @@ app.post("/api/parse-rx", upload.single("image"), async (req, res) => {
       OCR_MODE === "vietocr" ||
       (OCR_MODE === "auto" && (await pingVietOCR(VIETOCR_URL)));
 
+    const parseModel = (process.env.LLM_PROVIDER || "openai").toLowerCase() === "gemini" 
+      ? (process.env.GEMINI_MODEL || "gemini-1.5-flash")
+      : (process.env.OPENAI_PARSE_MODEL || "gpt-4o-mini");
+
+    const visionModel = (process.env.LLM_PROVIDER || "openai").toLowerCase() === "gemini" 
+      ? (process.env.GEMINI_VISION_MODEL || process.env.GEMINI_MODEL || "gemini-1.5-flash")
+      : (process.env.OPENAI_VISION_MODEL || "gpt-4o-mini");
+
     if (useVietOCR) {
       rawText = await ocrWithVietOCR(buffer, mimetype, VIETOCR_URL);
       ocrEngine = "vietocr";
@@ -203,7 +246,7 @@ app.post("/api/parse-rx", upload.single("image"), async (req, res) => {
           ...norm,
           raw_text: rawText,
           ocr_engine: ocrEngine,
-          parse_model: process.env.OPENAI_PARSE_MODEL || "gpt-4o-mini",
+          parse_model: parseModel,
           error: orientationMsg,
         });
       }
@@ -211,7 +254,7 @@ app.post("/api/parse-rx", upload.single("image"), async (req, res) => {
         ...norm,
         raw_text: rawText,
         ocr_engine: ocrEngine,
-        parse_model: process.env.OPENAI_PARSE_MODEL || "gpt-4o-mini",
+        parse_model: parseModel,
       });
     }
 
@@ -224,7 +267,7 @@ app.post("/api/parse-rx", upload.single("image"), async (req, res) => {
         ...norm,
         raw_text: norm.raw_text_preview || reviewed.raw_text_preview || parsed.raw_text_preview || "",
         ocr_engine: ocrEngine,
-        parse_model: process.env.OPENAI_VISION_MODEL || "gpt-4o-mini",
+        parse_model: visionModel,
         error: orientationMsg,
       });
     }
@@ -232,7 +275,7 @@ app.post("/api/parse-rx", upload.single("image"), async (req, res) => {
       ...norm,
       raw_text: norm.raw_text_preview || reviewed.raw_text_preview || parsed.raw_text_preview || "",
       ocr_engine: ocrEngine,
-      parse_model: process.env.OPENAI_VISION_MODEL || "gpt-4o-mini",
+      parse_model: visionModel,
     });
   } catch (err) {
     console.error(err);
@@ -249,7 +292,9 @@ app.get("*", (_req, res) => {
 });
 
 app.listen(PORT, () => {
+  const provider = (process.env.LLM_PROVIDER || "openai").toUpperCase();
   console.log(`\n  Rx Scan → http://localhost:${PORT}`);
-  console.log(`  OpenAI: ${openai ? "yes" : "NO — add OPENAI_API_KEY to server/.env"}`);
-  console.log(`  OCR mode: ${OCR_MODE} (VietOCR @ ${VIETOCR_URL})\n`);
+  console.log(`  LLM Provider: ${provider}`);
+  console.log(`  AI Client   : ${openai ? "yes" : "NO — check API keys in server/.env"}`);
+  console.log(`  OCR mode    : ${OCR_MODE} (VietOCR @ ${VIETOCR_URL})\n`);
 });

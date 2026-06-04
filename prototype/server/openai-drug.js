@@ -1,5 +1,6 @@
 import { parseModelJson } from "./parse-model-json.js";
 import { lookupCitations } from "./citation-lookup.js";
+import { resolveModel } from "./openai-parse.js";
 
 const cache = new Map();
 
@@ -35,7 +36,7 @@ export async function lookupDrugInfo(client, drugName) {
   if (!key) throw new Error("Thiếu tên thuốc");
   if (cache.has(key)) return { ...cache.get(key), cached: true };
 
-  const model = process.env.OPENAI_PARSE_MODEL || "gpt-4o-mini";
+  const model = resolveModel(undefined, "parse");
   const ingredient = extractIngredientName(drugName);
   const vinmecCitations = await lookupCitations(drugName);
   if (!vinmecCitations.length) {

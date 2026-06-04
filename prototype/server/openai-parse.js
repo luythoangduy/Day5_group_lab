@@ -50,7 +50,36 @@ const DRUG_NAME_REVIEW_SYSTEM = `Bạn kiểm tra tên thuốc sau OCR đơn thu
 - Nếu không chắc, corrected = original và confidence <= 0.75.
 - Chỉ trả JSON hợp lệ, không markdown.`;
 
+export function resolveModel(modelName, type = "parse") {
+  const provider = (process.env.LLM_PROVIDER || "openai").toLowerCase();
+  if (provider === "gemini") {
+    if (!modelName || modelName === "gpt-4o-mini") {
+      if (type === "vision") {
+        return process.env.GEMINI_VISION_MODEL || process.env.GEMINI_MODEL || "gemini-1.5-flash";
+      }
+      return process.env.GEMINI_MODEL || "gemini-1.5-flash";
+    }
+    return modelName;
+  }
+  
+  if (modelName) return modelName;
+  return type === "vision"
+    ? (process.env.OPENAI_VISION_MODEL || "gpt-4o-mini")
+    : (process.env.OPENAI_PARSE_MODEL || "gpt-4o-mini");
+}
+
 export function createOpenAIClient() {
+  const provider = (process.env.LLM_PROVIDER || "openai").toLowerCase();
+  
+  if (provider === "gemini") {
+    const key = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY;
+    if (!key) return null;
+    return new OpenAI({
+      apiKey: key,
+      baseURL: process.env.GEMINI_BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai",
+    });
+  }
+
   const key = process.env.OPENAI_API_KEY;
   if (!key) return null;
   return new OpenAI({
@@ -61,7 +90,7 @@ export function createOpenAIClient() {
 
 export async function parseFromText(client, rawText, model) {
   const completion = await client.chat.completions.create({
-    model: model || process.env.OPENAI_PARSE_MODEL || "gpt-4o-mini",
+    model: resolveModel(model, "parse"),
     response_format: { type: "json_object" },
     messages: [
       { role: "system", content: SYSTEM },
@@ -80,7 +109,7 @@ export async function parseFromImage(client, imageBuffer, mimeType, model) {
   const dataUrl = `data:${mimeType || "image/jpeg"};base64,${b64}`;
 
   const completion = await client.chat.completions.create({
-    model: model || process.env.OPENAI_VISION_MODEL || "gpt-4o-mini",
+    model: resolveModel(model, "vision"),
     response_format: { type: "json_object" },
     messages: [
       { role: "system", content: SYSTEM },
@@ -135,7 +164,7 @@ export async function reviewDrugNames(client, parsed, rawText = "", model) {
   }));
 
   const completion = await client.chat.completions.create({
-    model: model || process.env.OPENAI_PARSE_MODEL || "gpt-4o-mini",
+    model: resolveModel(model, "parse"),
     response_format: { type: "json_object" },
     messages: [
       { role: "system", content: DRUG_NAME_REVIEW_SYSTEM },

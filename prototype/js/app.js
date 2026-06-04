@@ -10,8 +10,10 @@ import {
   matchDrug,
   resolveDrug,
   fetchDrugsBatchAI,
+  fetchMohRegistryBatch,
+  getMohRegistryStatus,
   checkDrugApi,
-} from "./drugs.js";
+} from "./drugs.js?v=20260604-interactive-fix";
 import { fetchHealth, parseRxImage } from "./api.js";
 import { renderCitationsHtml } from "./citations-ui.js";
 import { attachCitations } from "./drug-citations.js";
@@ -291,6 +293,11 @@ function onSaveAndSync() {
 /** Tải trước thẻ thuốc (AI cho thuốc chưa có trong DB) */
 async function prefetchDrugInfo() {
   const names = [...new Set(state.rxLines.map((l) => l.drug_name?.trim()).filter(Boolean))];
+  try {
+    await fetchMohRegistryBatch(names);
+  } catch (e) {
+    console.warn("MOH registry prefetch:", e);
+  }
   const needAi = names.filter((n) => !matchDrug(n));
   if (!needAi.length) return;
   try {
@@ -544,12 +551,61 @@ function sourceBadge(source) {
   return "";
 }
 
-function renderDrugDetail(detail, drug, line) {
+function registryBadge(registry) {
+  if (!registry) return '<span class="chip-registry chip-registry-pending">Dang kiem tra Bo Y te</span>';
+  if (registry.unavailable) return '<span class="chip-registry chip-registry-warn">Chua bat server</span>';
+  if (registry.licensed) return '<span class="chip-registry chip-registry-ok">Bo Y te: tim thay</span>';
+  return '<span class="chip-registry chip-registry-warn">Chua thay trong QD 403</span>';
+}
+
+function renderRegistryHtml(registry) {
+  if (!registry) {
+    return `
+      <div class="registry-box registry-pending">
+        <strong>Dang kiem tra luu hanh</strong>
+        <p>Ung dung dang doi chieu voi danh muc Bo Y te da crawl.</p>
+      </div>`;
+  }
+  if (registry.unavailable) {
+    return `
+      <div class="registry-box registry-warn">
+        <strong>Chua kiem tra duoc danh muc Bo Y te</strong>
+        <p>Can chay Node server de tra du lieu QD 403/QD-QLD.</p>
+      </div>`;
+  }
+  if (!registry.licensed) {
+    return `
+      <div class="registry-box registry-warn">
+        <strong>Chua thay trong danh muc da crawl</strong>
+        <p>Khong tim thay ten/hoat chat/so dang ky khop trong ${esc(registry.source || "QD 403/QD-QLD")}.</p>
+      </div>`;
+  }
+
+  const first = registry.matches?.[0];
+  return `
+    <div class="registry-box registry-ok">
+      <strong>Da tim thay trong danh muc Bo Y te</strong>
+      <p>${esc(registry.source || "QD 403/QD-QLD")}</p>
+      ${first ? `
+        <dl class="registry-match">
+          <dt>Ten trong danh muc</dt><dd>${esc(first.medicine_name)}</dd>
+          <dt>So dang ky</dt><dd>${esc(first.registration_number)}</dd>
+          <dt>Quyet dinh</dt><dd>${esc(first.decision)}</dd>
+          <dt>Phu luc</dt><dd>${esc(first.appendix)}</dd>
+          <dt>Trang PDF</dt><dd>${esc(first.page)}</dd>
+        </dl>
+      ` : ""}
+    </div>`;
+}
+
+function renderDrugDetail(detail, drug, line, registry) {
   const showCites = drug.source !== "fallback";
   const hasVerifiedCites =
     showCites && Array.isArray(drug.citations) && drug.citations.some((c) => c.source_id);
   detail.innerHTML = `
     <div class="drug-detail" style="margin-top: 16px; border-top: 1px solid var(--md-outline); padding-top: 16px;">
+      ${renderRegistryHtml(registry)}
+
       <h4 class="label-sm" style="margin-bottom: 6px;">Hướng dẫn cách uống</h4>
       <p class="drug-body" style="font-size: 0.95rem; margin-bottom: 12px; color: var(--md-on-surface);">${esc(drug.how_to_take)}</p>
       
@@ -577,7 +633,7 @@ function renderDrugDetail(detail, drug, line) {
     e.target.disabled = true;
     e.target.textContent = "Đang tra…";
     const d = await resolveDrug(line.drug_name, { forceRetry: true });
-    renderDrugDetail(detail, d, line);
+    renderDrugDetail(detail, d, line, registry);
   });
 
   if (showCites) {
@@ -600,7 +656,7 @@ function renderDrugDetail(detail, drug, line) {
   }
 }
 
-function mountDrugCard(list, line, drug, autoExpand = false) {
+function mountDrugCard(list, line, drug, registry, autoExpand = false) {
   const card = document.createElement("div");
   card.className = "surface-card drug-card" + (drug.source === "fallback" ? " drug-card-error" : "");
   card.innerHTML = `
@@ -609,6 +665,7 @@ function mountDrugCard(list, line, drug, autoExpand = false) {
         <span>${esc(drug.display)} ${sourceBadge(drug.source)}</span>
         <span class="expand-icon" style="transition: transform 0.2s; font-size: 1rem; color: var(--md-primary);">▼</span>
       </h3>
+      <div class="drug-card-badges">${registryBadge(registry)}</div>
       <p class="drug-summary">${esc(drug.summary)}</p>
         ${drug.source === "fallback" ? '<button type="button" class="btn-tonal btn-sm btn-retry-inline" style="margin-top: 8px;">Tra lại nguồn Vinmec</button>' : ""}
     </div>
@@ -631,7 +688,7 @@ function mountDrugCard(list, line, drug, autoExpand = false) {
     const isHidden = detailsContainer.classList.contains("hidden");
     if (isHidden) {
       if (!detailsContainer.innerHTML) {
-        renderDrugDetail(detailsContainer, drug, line);
+        renderDrugDetail(detailsContainer, drug, line, registry);
       }
       detailsContainer.classList.remove("hidden");
       expandIcon.style.transform = "rotate(180deg)";
@@ -701,17 +758,23 @@ async function renderDrugCards() {
   } catch (e) {
     console.warn("Batch:", e);
   }
+  try {
+    await fetchMohRegistryBatch(names);
+  } catch (e) {
+    console.warn("MOH registry:", e);
+  }
 
   const resolved = await Promise.all(
     unique.map(async (line) => ({
       line,
       drug: await resolveDrug(line.drug_name),
+      registry: getMohRegistryStatus(line.drug_name),
     }))
   );
 
   list.innerHTML = "";
   const autoExpand = resolved.length === 1;
-  resolved.forEach(({ line, drug }) => mountDrugCard(list, line, drug, autoExpand));
+  resolved.forEach(({ line, drug, registry }) => mountDrugCard(list, line, drug, registry, autoExpand));
 }
 
 function showNotif(body, title = "MediLịch", event = null) {
@@ -806,16 +869,19 @@ function mockNotif() {
 // ——— Init ———
 
 async function init() {
-  await loadDrugDb();
   updateStatusBarTime();
   setInterval(updateStatusBarTime, 30000);
+  loadDrugDb();
 
   const health = await fetchHealth();
   const pill = $("status-pill");
-  if (health?.server === "medilich-node" && health?.openai) {
+  const aiReady =
+    health?.server === "medilich-node" &&
+    (health?.drug_lookup === true || health?.openai === true || health?.gemini === true);
+  if (aiReady) {
     pill.textContent = health.vietocr ? "AI+VietOCR" : "AI OK";
     pill.classList.add("ok");
-  } else if (health?.openai) {
+  } else if (health?.openai || health?.gemini) {
     pill.textContent = "API?";
     pill.classList.add("warn");
   } else {
@@ -829,7 +895,34 @@ async function init() {
 
   const drop = $("drop-zone");
   const fileInput = $("file-input");
-  drop.addEventListener("click", () => fileInput.click());
+  const openFilePicker = () => {
+    fileInput.value = "";
+    fileInput.click();
+  };
+
+  drop.addEventListener("click", openFilePicker);
+  drop.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openFilePicker();
+    }
+  });
+  drop.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    drop.classList.add("dragover");
+  });
+  drop.addEventListener("dragleave", () => drop.classList.remove("dragover"));
+  drop.addEventListener("drop", (e) => {
+    e.preventDefault();
+    drop.classList.remove("dragover");
+    const f = e.dataTransfer?.files?.[0];
+    if (!f) return;
+    if (!f.type.startsWith("image/") && !/\.(heic|heif)$/i.test(f.name || "")) {
+      alert("Chỉ nhận file ảnh.");
+      return;
+    }
+    updatePreview(f);
+  });
   fileInput.addEventListener("change", () => {
     const f = fileInput.files?.[0];
     if (f) updatePreview(f);

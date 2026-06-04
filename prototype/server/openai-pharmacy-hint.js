@@ -4,6 +4,7 @@
  */
 
 import { parseModelJson } from "./parse-model-json.js";
+import { resolveModel } from "./openai-parse.js";
 
 const cache = new Map();
 
@@ -11,7 +12,7 @@ export async function pharmacyHint(client, drugName, displayName) {
   const key = `${drugName}|${displayName}`.toLowerCase();
   if (cache.has(key)) return cache.get(key);
 
-  const model = process.env.OPENAI_PARSE_MODEL || "gpt-4o-mini";
+  const model = resolveModel(undefined, "parse");
   const completion = await client.chat.completions.create({
     model,
     response_format: { type: "json_object" },
