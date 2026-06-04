@@ -47,6 +47,7 @@ const state = {
   calMonth: new Date().getMonth(),
   selectedDate: getTodayIso(),
   editingReminderId: null,
+  activeNotifEvent: null,
 };
 
 function saveState() {
@@ -713,19 +714,90 @@ async function renderDrugCards() {
   resolved.forEach(({ line, drug }) => mountDrugCard(list, line, drug, autoExpand));
 }
 
-function showNotif(body, title = "MediLịch") {
+function showNotif(body, title = "MediLịch", event = null) {
   const toast = $("notif-toast");
   $("notif-body").textContent = body;
   toast.querySelector(".notif-title").textContent = title;
+  state.activeNotifEvent = event;
   toast.classList.remove("hidden");
   toast.classList.add("show");
-  setTimeout(() => toast.classList.remove("show"), 4000);
+}
+
+function hideNotif() {
+  const toast = $("notif-toast");
+  toast.classList.remove("show");
+  state.activeNotifEvent = null;
+  setTimeout(() => toast.classList.add("hidden"), 350);
+}
+
+function formatLocalDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatLocalTime(date) {
+  const hour = String(date.getHours()).padStart(2, "0");
+  const minute = String(date.getMinutes()).padStart(2, "0");
+  return `${hour}:${minute}`;
+}
+
+function snoozeEvent(event, minutes = 5) {
+  if (!event) return hideNotif();
+  const dueAt = new Date();
+  dueAt.setMinutes(dueAt.getMinutes() + minutes);
+  const date = formatLocalDate(dueAt);
+  const time = formatLocalTime(dueAt);
+  const snoozed = {
+    ...event,
+    date,
+    time,
+    label: `${event.drug_name} — ${event.dose}`,
+    snoozed_from: eventId(event),
+  };
+  state.schedule.push(snoozed);
+  state.schedule.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+  saveState();
+  renderHome();
+  renderCalendar();
+  hideNotif();
+  window.setTimeout(() => {
+    showNotif(`Đến giờ uống ${snoozed.drug_name} — ${snoozed.dose}`, "🔔 Nhắc uống thuốc", snoozed);
+  }, minutes * 60 * 1000);
+}
+
+function skipEvent(event) {
+  if (!event) return hideNotif();
+  hideNotif();
+}
+
+function doneEvent(event) {
+  if (!event) return hideNotif();
+  state.takenIds.add(eventId(event));
+  saveState();
+  renderHome();
+  renderCalendar();
+  hideNotif();
+  showNotif(`Đã uống ${event.drug_name}`, "Done");
+}
+
+function onNotifLater() {
+  snoozeEvent(state.activeNotifEvent, 5);
+}
+
+function onNotifSkip() {
+  skipEvent(state.activeNotifEvent);
+}
+
+function onNotifDone() {
+  doneEvent(state.activeNotifEvent);
 }
 
 function mockNotif() {
   const next = getNextReminder(state.schedule, state.takenIds);
   if (next) {
-    showNotif(`Đến giờ uống ${next.drug_name} — ${next.dose}`, "🔔 Nhắc uống thuốc");
+    showNotif(`Đến giờ uống ${next.drug_name} — ${next.dose}`, "🔔 Nhắc uống thuốc", next);
   } else {
     showNotif("Đến giờ uống Paracetamol 500mg — 1 viên", "🔔 Nhắc uống thuốc (demo)");
   }
@@ -799,10 +871,14 @@ async function init() {
   $("sheet-backdrop").addEventListener("click", closeSyncSheet);
 
   $("btn-mark-taken").addEventListener("click", onMarkTaken);
-  $("btn-snooze").addEventListener("click", () =>
-    showNotif("Sẽ nhắc lại sau 10 phút", "Tạm hoãn")
-  );
+  $("btn-snooze").addEventListener("click", () => {
+    const next = getNextReminder(state.schedule, state.takenIds);
+    if (next) snoozeEvent(next, 5);
+  });
   $("btn-mock-notif").addEventListener("click", mockNotif);
+  $("notif-later").addEventListener("click", onNotifLater);
+  $("notif-skip").addEventListener("click", onNotifSkip);
+  $("notif-done").addEventListener("click", onNotifDone);
 
   if (loadState()) {
     showFlow("main");
