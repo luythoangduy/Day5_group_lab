@@ -1,38 +1,37 @@
-/** Trích dẫn mặc định cho thuốc từ thư viện local (URL thật) */
+/** Trích dẫn thật từ server (PubMed, FDA, RxNorm, Wikipedia) */
 
-function enc(q) {
-  return encodeURIComponent(q);
+function apiUrl(path) {
+  return `${window.location.origin}${path}`;
 }
 
-export function defaultCitationsForDrug(drug) {
-  const q = drug.display || drug.names?.[0] || "medication";
-  return [
-    {
-      key: "drugbank",
-      title: "DrugBank",
-      type: "database",
-      url: `https://go.drugbank.com/unearth/q?searcher=drugs&query=${enc(q)}`,
-      excerpt: "Tra cứu hoạt chất và tương tác thuốc.",
-    },
-    {
-      key: "pubmed",
-      title: "PubMed (NIH)",
-      type: "research",
-      url: `https://pubmed.ncbi.nlm.nih.gov/?term=${enc(q)}`,
-      excerpt: "Tài liệu y học có kiểm chứng.",
-    },
-    {
-      key: "byt",
-      title: "Cổng dữ liệu dược quốc gia (Bộ Y tế)",
-      type: "official",
-      url: "https://duocquocgia.com.vn/",
-      excerpt: "Thông tin thuốc đăng ký tại Việt Nam.",
-    },
-  ];
+const citeCache = new Map();
+
+export async function fetchCitations(drugName) {
+  const key = String(drugName || "").trim().toLowerCase();
+  if (!key) return [];
+  if (citeCache.has(key)) return citeCache.get(key);
+
+  try {
+    const res = await fetch(
+      apiUrl(`/api/citations?name=${encodeURIComponent(drugName)}`)
+    );
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || res.status);
+    const list = data.citations || [];
+    citeCache.set(key, list);
+    return list;
+  } catch (e) {
+    console.warn("Citations:", drugName, e);
+    citeCache.set(key, []);
+    return [];
+  }
 }
 
-export function withCitations(drug) {
-  if (!drug) return drug;
-  if (drug.citations?.length) return drug;
-  return { ...drug, citations: defaultCitationsForDrug(drug) };
+export async function attachCitations(drug) {
+  if (!drug || drug.source === "fallback") return drug;
+  const name = drug.display || drug.names?.[0];
+  if (!name) return drug;
+
+  const citations = await fetchCitations(name);
+  return { ...drug, citations };
 }

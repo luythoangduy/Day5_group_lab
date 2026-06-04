@@ -1,7 +1,24 @@
-/** Hiển thị trích dẫn nguồn — URL từ server / thư viện local */
+/** Hiển thị trích dẫn — chỉ nguồn tra cứu thật */
 
-export function renderCitationsHtml(citations) {
-  if (!citations?.length) return "";
+export function renderCitationsHtml(citations, { loading = false } = {}) {
+  if (loading) {
+    return `
+      <section class="drug-citations">
+        <h4 class="label-sm">Nguồn tham khảo</h4>
+        <p class="cite-disclaimer body-sm">Đang tra PubMed, FDA, RxNorm, Wikipedia…</p>
+      </section>`;
+  }
+
+  if (!citations?.length) {
+    return `
+      <section class="drug-citations drug-citations-empty">
+        <h4 class="label-sm">Nguồn tham khảo</h4>
+        <p class="cite-disclaimer body-sm">
+          Chưa tìm thấy bài viết hoặc nhãn thuốc công khai khớp tên này.
+          Hỏi dược sĩ hoặc bác sĩ kê đơn.
+        </p>
+      </section>`;
+  }
 
   const items = citations
     .map((c) => {
@@ -30,8 +47,10 @@ export function renderCitationsHtml(citations) {
 
   return `
     <section class="drug-citations">
-      <h4 class="label-sm">Nguồn tham khảo</h4>
-      <p class="cite-disclaimer body-sm">Mô tả có căn cứ từ các nguồn dưới — không thay tư vấn bác sĩ.</p>
+      <h4 class="label-sm">Nguồn tham khảo (tra cứu thật)</h4>
+      <p class="cite-disclaimer body-sm">
+        Liên kết tới bài PubMed, nhãn FDA/DailyMed, RxNorm hoặc Wikipedia khi có kết quả khớp.
+      </p>
       <ul class="cite-list">${items}</ul>
     </section>`;
 }

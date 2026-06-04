@@ -6,6 +6,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { createOpenAIClient, parseFromImage, parseFromText, normalizeLines } from "./openai-parse.js";
 import { lookupDrugInfo } from "./openai-drug.js";
+import { lookupCitations } from "./citation-lookup.js";
 import { pharmacyHint } from "./openai-pharmacy-hint.js";
 import { findNearbyPlaces } from "./nearby-places.js";
 import { ocrWithVietOCR, pingVietOCR } from "./vietocr-client.js";
@@ -67,6 +68,27 @@ app.get("/api/nearby", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message || "Nearby search failed" });
+  }
+});
+
+app.get("/api/citations", async (req, res) => {
+  try {
+    const name = String(req.query.name || req.query.drug_name || "").trim();
+    if (!name) return res.status(400).json({ error: "Thiếu name" });
+
+    const citations = await lookupCitations(name);
+    res.json({
+      drug_name: name,
+      citations,
+      verified: true,
+      note:
+        citations.length === 0
+          ? "Không tìm thấy bài viết/nhãn thuốc khớp trên PubMed, FDA, RxNorm, Wikipedia."
+          : "Chỉ hiển thị nguồn có kết quả tra cứu thật.",
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message || "Citation lookup failed" });
   }
 });
 

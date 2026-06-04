@@ -1,8 +1,7 @@
-import { withCitations } from "./drug-citations.js";
-
 let drugDb = [];
 const aiCache = new Map();
 let apiReady = null;
+
 function apiUrl(path) {
   return `${window.location.origin}${path}`;
 }
@@ -44,7 +43,6 @@ function normalizeName(s) {
     .trim();
 }
 
-/** Bỏ đơn vị mg, tab, viên để match tên thuốc */
 function coreTokens(norm) {
   const stop = new Set(["mg", "ml", "g", "iu", "tab", "vien", "caps", "cap", "oral", "mgv"]);
   return norm
@@ -60,19 +58,20 @@ export function matchDrug(drugName) {
   for (const drug of drugDb) {
     const displayNorm = normalizeName(drug.display);
     if (norm.includes(displayNorm) || displayNorm.includes(norm)) {
-      return withCitations({ ...drug, source: "local" });
+      return { ...drug, source: "local" };
     }
     for (const alias of drug.names) {
       const a = normalizeName(alias);
       if (norm.includes(a) || a.includes(norm)) {
-        return withCitations({ ...drug, source: "local" });
+        return { ...drug, source: "local" };
       }
       for (const t of tokens) {
         if (t.includes(a) || a.includes(t)) {
-          return withCitations({ ...drug, source: "local" });
+          return { ...drug, source: "local" };
         }
       }
-    }  }
+    }
+  }
   return null;
 }
 
@@ -110,11 +109,10 @@ export async function fetchDrugFromAI(drugName) {
   }
 
   data.source = "openai";
-  const enriched = withCitations(data);
-  aiCache.set(key, enriched);
-  return enriched;}
+  aiCache.set(key, data);
+  return data;
+}
 
-/** Tra nhiều thuốc một lần (ít lỗi hơn) */
 export async function fetchDrugsBatchAI(drugNames) {
   const hasApi = await checkDrugApi();
   if (!hasApi) throw new Error("Cần chạy npm start trong prototype/server");
@@ -132,7 +130,8 @@ export async function fetchDrugsBatchAI(drugNames) {
 
   for (const [name, info] of Object.entries(data.results || {})) {
     if (info.error) continue;
-    aiCache.set(normalizeName(name), withCitations({ ...info, source: "openai" }));  }
+    aiCache.set(normalizeName(name), { ...info, source: "openai" });
+  }
 }
 
 export async function resolveDrug(drugName, { forceRetry = false } = {}) {

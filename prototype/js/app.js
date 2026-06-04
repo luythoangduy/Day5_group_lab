@@ -14,6 +14,7 @@ import {
 } from "./drugs.js";
 import { fetchHealth, parseRxImage } from "./api.js";
 import { renderCitationsHtml } from "./citations-ui.js";
+import { attachCitations } from "./drug-citations.js";
 import { mountNearbyBuySection } from "./nearby.js";
 import {
   getTodayEvents,
@@ -460,8 +461,9 @@ function sourceBadge(source) {
 }
 
 function renderDrugDetail(detail, drug, line) {
-  const citationsBlock =
-    drug.source !== "fallback" ? renderCitationsHtml(drug.citations) : "";
+  const showCites = drug.source !== "fallback";
+  const hasVerifiedCites =
+    showCites && Array.isArray(drug.citations) && drug.citations.some((c) => c.source_id);
 
   detail.innerHTML = `
     <div class="surface-card drug-detail">
@@ -471,7 +473,7 @@ function renderDrugDetail(detail, drug, line) {
       <p class="drug-body">${esc(drug.how_to_take)} · Theo đơn: ${line.frequency_per_day} lần/ngày, ${esc(line.meal_relation)}</p>
       <h4 class="label-sm">Lưu ý</h4>
       <ul class="drug-warnings">${(drug.warnings || []).map((w) => `<li>${esc(w)}</li>`).join("")}</ul>
-      ${citationsBlock}
+      ${showCites ? '<div class="cite-mount"></div>' : ""}
       ${drug.source === "fallback" ? '<button type="button" class="btn-tonal btn-retry-drug">Tra lại bằng AI</button>' : ""}
     </div>`;
 
@@ -483,7 +485,21 @@ function renderDrugDetail(detail, drug, line) {
     renderDrugCards();
   });
 
-  if (drug.source !== "fallback") {
+  if (showCites) {
+    const citeMount = detail.querySelector(".cite-mount");
+    citeMount.innerHTML = renderCitationsHtml(
+      hasVerifiedCites ? drug.citations : null,
+      { loading: !hasVerifiedCites }
+    );
+
+    if (!hasVerifiedCites) {
+      attachCitations(drug).then((d) => {
+        if (citeMount.isConnected) {
+          citeMount.innerHTML = renderCitationsHtml(d.citations);
+        }
+      });
+    }
+
     const card = detail.querySelector(".drug-detail");
     mountNearbyBuySection(card, drug, line);
   }
