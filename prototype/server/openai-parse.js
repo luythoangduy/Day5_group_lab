@@ -28,7 +28,10 @@ const SYSTEM = `Bạn trích xuất đơn thuốc tiếng Việt thành JSON.
 export function createOpenAIClient() {
   const key = process.env.OPENAI_API_KEY;
   if (!key) return null;
-  return new OpenAI({ apiKey: key });
+  return new OpenAI({
+    apiKey: key,
+    baseURL: process.env.OPENAI_BASE_URL || undefined,
+  });
 }
 
 export async function parseFromText(client, rawText, model) {

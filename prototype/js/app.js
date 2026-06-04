@@ -464,23 +464,35 @@ function renderDrugDetail(detail, drug, line) {
     drug.source !== "fallback" ? renderCitationsHtml(drug.citations) : "";
 
   detail.innerHTML = `
-    <div class="surface-card drug-detail">
-      <h3 class="drug-title">${esc(drug.display)} ${sourceBadge(drug.source)}</h3>
-      <p class="drug-summary">${esc(drug.summary)}</p>
-      <h4 class="label-sm">Cách uống</h4>
-      <p class="drug-body">${esc(drug.how_to_take)} · Theo đơn: ${line.frequency_per_day} lần/ngày, ${esc(line.meal_relation)}</p>
-      <h4 class="label-sm">Lưu ý</h4>
-      <ul class="drug-warnings">${(drug.warnings || []).map((w) => `<li>${esc(w)}</li>`).join("")}</ul>
+    <div class="drug-detail" style="margin-top: 16px; border-top: 1px solid var(--md-outline); padding-top: 16px;">
+      <h4 class="label-sm" style="margin-bottom: 6px;">Hướng dẫn cách uống</h4>
+      <p class="drug-body" style="font-size: 0.95rem; margin-bottom: 12px; color: var(--md-on-surface);">${esc(drug.how_to_take)}</p>
+      
+      <div class="rx-specific-instruction" style="background: var(--md-primary-container); color: var(--md-primary); padding: 10px 14px; border-radius: 8px; font-size: 0.9rem; font-weight: 500; display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+        <span style="font-size: 1.2rem;">📋</span>
+        <span><strong>Chỉ định theo đơn:</strong> ${line.frequency_per_day} lần/ngày (${esc(line.meal_relation || "không yêu cầu ăn uống")})</span>
+      </div>
+
+      <h4 class="label-sm" style="margin-bottom: 8px; color: #ba1a1a;">Lưu ý quan trọng</h4>
+      <div class="drug-warnings-list" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
+        ${(drug.warnings || []).map((w) => `
+          <div class="warning-item" style="display: flex; gap: 8px; align-items: flex-start; background: #fff5f5; border-left: 4px solid #ba1a1a; padding: 10px 12px; border-radius: 6px; font-size: 0.9rem; color: #7f1d1d;">
+            <span style="font-size: 1rem; line-height: 1.2;">⚠️</span>
+            <span style="line-height: 1.4;">${esc(w)}</span>
+          </div>
+        `).join("")}
+      </div>
+
       ${citationsBlock}
       ${drug.source === "fallback" ? '<button type="button" class="btn-tonal btn-retry-drug">Tra lại bằng AI</button>' : ""}
     </div>`;
 
   detail.querySelector(".btn-retry-drug")?.addEventListener("click", async (e) => {
+    e.stopPropagation();
     e.target.disabled = true;
     e.target.textContent = "Đang tra…";
     const d = await resolveDrug(line.drug_name, { forceRetry: true });
     renderDrugDetail(detail, d, line);
-    renderDrugCards();
   });
 
   if (drug.source !== "fallback") {
@@ -489,26 +501,67 @@ function renderDrugDetail(detail, drug, line) {
   }
 }
 
-function mountDrugCard(list, detail, line, drug) {
+function mountDrugCard(list, line, drug, autoExpand = false) {
   const card = document.createElement("div");
   card.className = "surface-card drug-card" + (drug.source === "fallback" ? " drug-card-error" : "");
   card.innerHTML = `
-    <h3 class="drug-title">${esc(drug.display)} ${sourceBadge(drug.source)}</h3>
-    <p class="drug-summary">${esc(drug.summary)}</p>
-    ${drug.source === "fallback" ? '<button type="button" class="btn-tonal btn-sm btn-retry-inline">Tra lại</button>' : ""}
+    <div class="drug-card-header" style="cursor: pointer;">
+      <h3 class="drug-title" style="display: flex; justify-content: space-between; align-items: center;">
+        <span>${esc(drug.display)} ${sourceBadge(drug.source)}</span>
+        <span class="expand-icon" style="transition: transform 0.2s; font-size: 1rem; color: var(--md-primary);">▼</span>
+      </h3>
+      <p class="drug-summary">${esc(drug.summary)}</p>
+      ${drug.source === "fallback" ? '<button type="button" class="btn-tonal btn-sm btn-retry-inline" style="margin-top: 8px;">Tra lại</button>' : ""}
+    </div>
+    <div class="drug-card-details hidden" style="margin-top: 0;"></div>
   `;
-  card.addEventListener("click", (e) => {
+
+  const detailsContainer = card.querySelector(".drug-card-details");
+  const expandIcon = card.querySelector(".expand-icon");
+
+  const toggleExpand = () => {
+    // Collapse other cards
+    list.querySelectorAll(".drug-card").forEach((otherCard) => {
+      if (otherCard !== card) {
+        otherCard.querySelector(".drug-card-details")?.classList.add("hidden");
+        const otherIcon = otherCard.querySelector(".expand-icon");
+        if (otherIcon) otherIcon.style.transform = "rotate(0deg)";
+      }
+    });
+
+    const isHidden = detailsContainer.classList.contains("hidden");
+    if (isHidden) {
+      if (!detailsContainer.innerHTML) {
+        renderDrugDetail(detailsContainer, drug, line);
+      }
+      detailsContainer.classList.remove("hidden");
+      expandIcon.style.transform = "rotate(180deg)";
+      // Scroll smoothly into view
+      setTimeout(() => {
+        card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }, 100);
+    } else {
+      detailsContainer.classList.add("hidden");
+      expandIcon.style.transform = "rotate(0deg)";
+    }
+  };
+
+  card.querySelector(".drug-card-header").addEventListener("click", (e) => {
     if (e.target.classList.contains("btn-retry-inline")) {
       e.stopPropagation();
       resolveDrug(line.drug_name, { forceRetry: true }).then((d) => {
-        renderDrugDetail(detail, d, line);
         renderDrugCards();
       });
       return;
     }
-    renderDrugDetail(detail, drug, line);
+    toggleExpand();
   });
+
   list.appendChild(card);
+
+  if (autoExpand) {
+    toggleExpand();
+  }
 }
 
 async function renderDrugCards() {
@@ -516,7 +569,7 @@ async function renderDrugCards() {
   const detail = $("drug-detail");
   const banner = $("drug-api-banner");
   list.innerHTML = "";
-  detail.innerHTML = "";
+  if (detail) detail.innerHTML = "";
 
   if (!state.rxLines.length) {
     list.innerHTML = '<div class="surface-card drug-body">Quét đơn để xem thẻ thuốc</div>';
@@ -558,11 +611,8 @@ async function renderDrugCards() {
   );
 
   list.innerHTML = "";
-  resolved.forEach(({ line, drug }) => mountDrugCard(list, detail, line, drug));
-
-  if (resolved.length === 1) {
-    renderDrugDetail(detail, resolved[0].drug, resolved[0].line);
-  }
+  const autoExpand = resolved.length === 1;
+  resolved.forEach(({ line, drug }) => mountDrugCard(list, line, drug, autoExpand));
 }
 
 function showNotif(body, title = "MediLịch") {

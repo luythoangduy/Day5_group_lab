@@ -38,7 +38,7 @@ html, body {
   height: 100%;
   overflow: hidden;
   background: #1a1a1a;
-  font-family: "Roboto", "Be Vietnam Pro", system-ui, sans-serif;
+  font-family: "Be Vietnam Pro", "Roboto", system-ui, sans-serif;
   color: var(--md-on-surface);
 }
 
