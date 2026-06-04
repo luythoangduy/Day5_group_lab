@@ -1,0 +1,44 @@
+{
+  "batch": "182.1",
+  "search_phrase": "danh sách thuốc được lưu hành đợt 182.1",
+  "chosen_url": "https://dav.gov.vn/upload_images/files/132_QD_QLD%202023_signed.pdf",
+  "attempts": [
+    {
+      "query": "site:dav.gov.vn \"danh sách thuốc được lưu hành đợt 182.1\"",
+      "result_count": 0,
+      "download_count": 0,
+      "results": [],
+      "downloads": []
+    },
+    {
+      "query": "site:dav.gov.vn \"danh sách thuốc được lưu hành\" \"đợt 182.1\"",
+      "result_count": 1,
+      "download_count": 0,
+      "results": [
+        "https://duckduckgo.com/"
+      ],
+      "downloads": []
+    },
+    {
+      "query": "site:dav.gov.vn \"danh sách thuốc\" \"lưu hành\" \"đợt 182.1\"",
+      "result_count": 1,
+      "download_count": 0,
+      "results": [
+        "https://duckduckgo.com/"
+      ],
+      "downloads": []
+    },
+    {
+      "query": "site:dav.gov.vn \"danh mục\" \"thuốc\" \"đợt 182.1\"",
+      "result_count": 1,
+      "download_count": 1,
+      "results": [
+        "https://dav.gov.vn/quyet-dinh-so-132qd-qld-ve-viec-ban-hanh-danh-muc-18-thuoc-san-xuat-trong-nuoc-duoc-cap-giay-dang-ky-luu-hanh-tai-viet-nam---dot-1821-n3844.html"
+      ],
+      "downloads": [
+        "https://dav.gov.vn/upload_images/files/132_QD_QLD%202023_signed.pdf"
+      ]
+    }
+  ],
+  "record_count": 18
+}
