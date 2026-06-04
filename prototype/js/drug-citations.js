@@ -1,4 +1,4 @@
-/** Trích dẫn thật từ server (PubMed, FDA, RxNorm, Wikipedia) */
+/** Trích dẫn thật từ server (chỉ Vinmec) */
 
 function apiUrl(path) {
   return `${window.location.origin}${path}`;

@@ -1,6 +1,11 @@
 import OpenAI from "openai";
 
 const RX_SCHEMA = `{
+  "document_quality": {
+    "orientation": "upright|sideways|upside_down|skewed|unknown",
+    "readable": true,
+    "issues": ["short issue, e.g. text is sideways"]
+  },
   "lines": [
     {
       "drug_name": "string",
@@ -23,7 +28,27 @@ const SYSTEM = `Bạn trích xuất đơn thuốc tiếng Việt thành JSON.
 - frequency_per_day: suy từ "2 viên x 3 lần/ngày" → 3.
 - confidence thấp (0.4-0.6) nếu chữ mờ hoặc không chắc.
 - Bỏ qua thông tin bệnh nhân (tên, CMND) — chỉ thuốc.
+- Nếu ảnh đơn bị xoay ngang, xoay ngược, nghiêng nặng, bị crop mất cột thuốc, hoặc không đọc được an toàn: document_quality.readable=false, nêu issue, và lines: [].
 - Nếu không đọc được, lines: [].`;
+
+const DRUG_NAME_REVIEW_SCHEMA = `{
+  "corrections": [
+    {
+      "index": 0,
+      "original": "tên thuốc đã parse",
+      "corrected": "tên thuốc đã sửa nếu chắc hơn",
+      "confidence": 0-1,
+      "reason": "ngắn gọn: ví dụ OCR thiếu chữ I trong ZINC"
+    }
+  ]
+}`;
+
+const DRUG_NAME_REVIEW_SYSTEM = `Bạn kiểm tra tên thuốc sau OCR đơn thuốc tiếng Việt.
+- Chỉ sửa lỗi OCR rõ ràng: thiếu/dư ký tự, nhầm I/1/l, O/0, C/G, N/M, ZNC→ZINC, khoảng trắng/dấu gạch.
+- Không tự đổi sang thuốc khác nếu không có căn cứ trong raw text hoặc tên thuốc phổ biến.
+- Giữ nguyên hàm lượng/dạng dùng nếu có.
+- Nếu không chắc, corrected = original và confidence <= 0.75.
+- Chỉ trả JSON hợp lệ, không markdown.`;
 
 export function createOpenAIClient() {
   const key = process.env.OPENAI_API_KEY;
@@ -78,6 +103,10 @@ export async function parseFromImage(client, imageBuffer, mimeType, model) {
 export function normalizeLines(data) {
   const lines = (data.lines || []).map((line) => ({
     drug_name: String(line.drug_name || "").trim(),
+    ...(line.original_drug_name
+      ? { original_drug_name: String(line.original_drug_name).trim() }
+      : {}),
+    ...(line.drug_name_review ? { drug_name_review: line.drug_name_review } : {}),
     dose_per_time: String(line.dose_per_time || "1 liều").trim(),
     frequency_per_day: clamp(Number(line.frequency_per_day) || 1, 1, 4),
     meal_relation: String(line.meal_relation || "").trim(),
@@ -90,7 +119,64 @@ export function normalizeLines(data) {
   }));
   return {
     lines,
+    document_quality: normalizeDocumentQuality(data.document_quality),
     raw_text_preview: data.raw_text_preview || "",
+  };
+}
+
+export async function reviewDrugNames(client, parsed, rawText = "", model) {
+  const lines = parsed?.lines || [];
+  if (!client || !lines.length) return parsed;
+
+  const payload = lines.map((line, index) => ({
+    index,
+    drug_name: line.drug_name,
+    dose_per_time: line.dose_per_time,
+  }));
+
+  const completion = await client.chat.completions.create({
+    model: model || process.env.OPENAI_PARSE_MODEL || "gpt-4o-mini",
+    response_format: { type: "json_object" },
+    messages: [
+      { role: "system", content: DRUG_NAME_REVIEW_SYSTEM },
+      {
+        role: "user",
+        content: `Raw OCR/preview:\n${String(rawText || parsed.raw_text_preview || "").slice(0, 2500)}\n\nTên thuốc đã parse:\n${JSON.stringify(payload)}\n\nSchema:\n${DRUG_NAME_REVIEW_SCHEMA}`,
+      },
+    ],
+    temperature: 0,
+  });
+
+  const review = JSON.parse(completion.choices[0].message.content || "{}");
+  const corrections = Array.isArray(review.corrections) ? review.corrections : [];
+  const byIndex = new Map(corrections.map((item) => [Number(item.index), item]));
+
+  return {
+    ...parsed,
+    lines: lines.map((line, index) => {
+      const item = byIndex.get(index);
+      const corrected = String(item?.corrected || line.drug_name || "").trim();
+      const original = String(line.drug_name || "").trim();
+      if (!corrected || normalizeLoose(corrected) === normalizeLoose(original)) {
+        return line;
+      }
+
+      const confidence = clamp01(item?.confidence ?? line.confidence?.drug_name ?? 0.75);
+      return {
+        ...line,
+        drug_name: corrected,
+        original_drug_name: original,
+        drug_name_review: {
+          corrected: true,
+          confidence,
+          reason: String(item?.reason || "Tên thuốc được kiểm tra lại sau OCR").trim(),
+        },
+        confidence: {
+          ...(line.confidence || {}),
+          drug_name: confidence,
+        },
+      };
+    }),
   };
 }
 
@@ -99,4 +185,25 @@ function clamp(n, min, max) {
 }
 function clamp01(n) {
   return clamp(Number(n), 0, 1);
+}
+
+function normalizeDocumentQuality(quality = {}) {
+  const orientation = String(quality.orientation || "unknown").trim().toLowerCase();
+  const allowed = new Set(["upright", "sideways", "upside_down", "skewed", "unknown"]);
+  const issues = Array.isArray(quality.issues)
+    ? quality.issues.map((x) => String(x).trim()).filter(Boolean).slice(0, 5)
+    : [];
+  return {
+    orientation: allowed.has(orientation) ? orientation : "unknown",
+    readable: quality.readable !== false,
+    issues,
+  };
+}
+
+function normalizeLoose(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .replace(/[^a-z0-9]+/g, "");
 }

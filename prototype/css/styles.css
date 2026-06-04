@@ -442,6 +442,45 @@ html, body {
   justify-content: center;
   height: 100%;
 }
+.reminder-main {
+  flex: 1;
+  cursor: pointer;
+  min-width: 0;
+}
+.reminder-item.editing {
+  display: block;
+  padding: 14px 0 !important;
+}
+.reminder-edit-form {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  gap: 8px 10px;
+  align-items: center;
+}
+.reminder-edit-form label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--md-on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.reminder-edit-form input,
+.reminder-edit-form select {
+  width: 100%;
+  border: 1px solid var(--md-outline);
+  border-radius: 8px;
+  padding: 9px 10px;
+  font: inherit;
+  background: #fff;
+  color: var(--md-on-surface);
+  min-width: 0;
+}
+.reminder-edit-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
 
 /* Calendar */
 .cal-header {

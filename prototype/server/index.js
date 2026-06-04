@@ -6,7 +6,7 @@ import cors from "cors";
 import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
-import { createOpenAIClient, parseFromImage, parseFromText, normalizeLines } from "./openai-parse.js";
+import { createOpenAIClient, parseFromImage, parseFromText, normalizeLines, reviewDrugNames } from "./openai-parse.js";
 import { lookupDrugInfo } from "./openai-drug.js";
 import { lookupCitations } from "./citation-lookup.js";
 import { pharmacyHint } from "./openai-pharmacy-hint.js";
@@ -36,6 +36,15 @@ app.use(cors());
 app.use(express.json());
 
 const openai = createOpenAIClient();
+
+function orientationError(norm) {
+  const quality = norm?.document_quality;
+  if (!quality) return null;
+  const badOrientation = ["sideways", "upside_down"].includes(quality.orientation);
+  if (quality.readable !== false && !badOrientation) return null;
+  const issue = quality.issues?.[0] || "Ảnh đơn thuốc không đủ rõ để đọc an toàn.";
+  return `Ảnh đơn thuốc có vẻ bị xoay/nghiêng hoặc khó đọc: ${issue}. Vui lòng xoay ảnh đúng chiều rồi thử lại.`;
+}
 
 app.get("/api/health", async (_req, res) => {
   const vietocrUp = await pingVietOCR(VIETOCR_URL);
@@ -96,8 +105,8 @@ app.get("/api/citations", async (req, res) => {
       verified: true,
       note:
         citations.length === 0
-          ? "Không tìm thấy bài viết/nhãn thuốc khớp trên PubMed, FDA, RxNorm, Wikipedia."
-          : "Chỉ hiển thị nguồn có kết quả tra cứu thật.",
+          ? "Không tìm thấy bài viết/trang thuốc khớp trên Vinmec."
+          : "Chỉ hiển thị nguồn Vinmec có kết quả tra cứu thật.",
     });
   } catch (err) {
     console.error(err);
@@ -186,7 +195,18 @@ app.post("/api/parse-rx", upload.single("image"), async (req, res) => {
       rawText = await ocrWithVietOCR(buffer, mimetype, VIETOCR_URL);
       ocrEngine = "vietocr";
       const parsed = await parseFromText(openai, rawText);
-      const norm = normalizeLines(parsed);
+      const reviewed = await reviewDrugNames(openai, parsed, rawText);
+      const norm = normalizeLines(reviewed);
+      const orientationMsg = orientationError(norm);
+      if (orientationMsg) {
+        return res.status(422).json({
+          ...norm,
+          raw_text: rawText,
+          ocr_engine: ocrEngine,
+          parse_model: process.env.OPENAI_PARSE_MODEL || "gpt-4o-mini",
+          error: orientationMsg,
+        });
+      }
       return res.json({
         ...norm,
         raw_text: rawText,
@@ -196,10 +216,21 @@ app.post("/api/parse-rx", upload.single("image"), async (req, res) => {
     }
 
     const parsed = await parseFromImage(openai, buffer, mimetype);
-    const norm = normalizeLines(parsed);
+    const reviewed = await reviewDrugNames(openai, parsed, parsed.raw_text_preview || "");
+    const norm = normalizeLines(reviewed);
+    const orientationMsg = orientationError(norm);
+    if (orientationMsg) {
+      return res.status(422).json({
+        ...norm,
+        raw_text: norm.raw_text_preview || reviewed.raw_text_preview || parsed.raw_text_preview || "",
+        ocr_engine: ocrEngine,
+        parse_model: process.env.OPENAI_VISION_MODEL || "gpt-4o-mini",
+        error: orientationMsg,
+      });
+    }
     return res.json({
       ...norm,
-      raw_text: norm.raw_text_preview || parsed.raw_text_preview || "",
+      raw_text: norm.raw_text_preview || reviewed.raw_text_preview || parsed.raw_text_preview || "",
       ocr_engine: ocrEngine,
       parse_model: process.env.OPENAI_VISION_MODEL || "gpt-4o-mini",
     });

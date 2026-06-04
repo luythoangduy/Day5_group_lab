@@ -1,4 +1,5 @@
 import { parseModelJson } from "./parse-model-json.js";
+import { lookupCitations } from "./citation-lookup.js";
 
 const cache = new Map();
 
@@ -6,7 +7,8 @@ const SYSTEM = `Bạn là trợ lý giải thích thuốc cho bệnh nhân Việ
 - CHỈ trả một object JSON thuần, không markdown, không HTML, không giải thích ngoài JSON.
 - Tiếng Việt dễ hiểu.
 - Không chẩn đoán bệnh, không thay bác sĩ.
-- KHÔNG trả citations hay links.`;
+- KHÔNG trả citations hay links.
+- Chỉ dùng thông tin trong nguồn Vinmec được cung cấp. Nếu không có nguồn Vinmec khớp, nói rõ chưa tìm thấy nguồn Vinmec khớp và khuyên hỏi bác sĩ/dược sĩ.`;
 
 const SCHEMA = `{
   "display": "tên hiển thị",
@@ -35,6 +37,22 @@ export async function lookupDrugInfo(client, drugName) {
 
   const model = process.env.OPENAI_PARSE_MODEL || "gpt-4o-mini";
   const ingredient = extractIngredientName(drugName);
+  const vinmecCitations = await lookupCitations(drugName);
+  if (!vinmecCitations.length) {
+    const result = {
+      id: `unverified-${key.slice(0, 40).replace(/\W+/g, "-")}`,
+      display: drugName,
+      summary: "Chưa tìm thấy bài viết Vinmec khớp tên thuốc này nên chưa thể tóm tắt công dụng.",
+      how_to_take: "Theo đúng chỉ định trên đơn. Hỏi bác sĩ hoặc dược sĩ nếu chưa chắc.",
+      warnings: ["Không tự suy luận công dụng thuốc khi chưa có nguồn Vinmec khớp."],
+      citations: [],
+      source: "fallback",
+      names: [key],
+      unverified: true,
+    };
+    cache.set(key, result);
+    return result;
+  }
   const promptName =
     ingredient && ingredient.toLowerCase() !== key
       ? `${drugName} (hoạt chất: ${ingredient})`
@@ -49,7 +67,7 @@ export async function lookupDrugInfo(client, drugName) {
         { role: "system", content: SYSTEM },
         {
           role: "user",
-          content: `Giải thích thuốc trên đơn Việt Nam: "${promptName}"\nSchema:\n${SCHEMA}`,
+          content: `Giải thích thuốc trên đơn Việt Nam: "${promptName}"\n\nNguồn Vinmec tìm được:\n${JSON.stringify(vinmecCitations.map((c) => ({ title: c.title, excerpt: c.excerpt })))}\n\nSchema:\n${SCHEMA}`,
         },
       ],
       temperature: 0.2,
@@ -78,7 +96,7 @@ export async function lookupDrugInfo(client, drugName) {
     warnings: Array.isArray(raw.warnings)
       ? raw.warnings.map(String)
       : ["Xác nhận với bác sĩ hoặc dược sĩ"],
-    citations: [],
+    citations: vinmecCitations,
     source: "openai",
     names: [key],
   };

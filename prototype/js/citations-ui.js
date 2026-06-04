@@ -5,7 +5,7 @@ export function renderCitationsHtml(citations, { loading = false } = {}) {
     return `
       <section class="drug-citations">
         <h4 class="label-sm">Nguồn tham khảo</h4>
-        <p class="cite-disclaimer body-sm">Đang tra PubMed, FDA, RxNorm, Wikipedia…</p>
+        <p class="cite-disclaimer body-sm">Đang tra nguồn Vinmec…</p>
       </section>`;
   }
 
@@ -14,7 +14,7 @@ export function renderCitationsHtml(citations, { loading = false } = {}) {
       <section class="drug-citations drug-citations-empty">
         <h4 class="label-sm">Nguồn tham khảo</h4>
         <p class="cite-disclaimer body-sm">
-          Chưa tìm thấy bài viết hoặc nhãn thuốc công khai khớp tên này.
+          Chưa tìm thấy bài viết Vinmec khớp tên này.
           Hỏi dược sĩ hoặc bác sĩ kê đơn.
         </p>
       </section>`;
@@ -47,9 +47,9 @@ export function renderCitationsHtml(citations, { loading = false } = {}) {
 
   return `
     <section class="drug-citations">
-      <h4 class="label-sm">Nguồn tham khảo (tra cứu thật)</h4>
+      <h4 class="label-sm">Nguồn tham khảo Vinmec</h4>
       <p class="cite-disclaimer body-sm">
-        Liên kết tới bài PubMed, nhãn FDA/DailyMed, RxNorm hoặc Wikipedia khi có kết quả khớp.
+        Chỉ hiển thị bài viết hoặc trang thuốc tìm thấy trên vinmec.com.
       </p>
       <ul class="cite-list">${items}</ul>
     </section>`;

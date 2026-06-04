@@ -46,6 +46,7 @@ const state = {
   calYear: new Date().getFullYear(),
   calMonth: new Date().getMonth(),
   selectedDate: getTodayIso(),
+  editingReminderId: null,
 };
 
 function saveState() {
@@ -239,6 +240,9 @@ function renderReview() {
     lineIssues.forEach((iss) => {
       badges += `<span class="badge badge-${iss.type === "danger" ? "danger" : "warn"}">${iss.msg}</span>`;
     });
+    if (line.drug_name_review?.corrected && line.original_drug_name) {
+      badges += `<span class="badge badge-warn">Đã sửa OCR: ${esc(line.original_drug_name)} → ${esc(line.drug_name)}</span>`;
+    }
 
     div.innerHTML = `
       ${badges}
@@ -337,9 +341,51 @@ function renderHome() {
     const done = state.takenIds.has(id);
     const li = document.createElement("li");
     li.className = "reminder-item" + (done ? " done" : "");
+    if (state.editingReminderId === id) {
+      li.className += " editing";
+      li.innerHTML = `
+        <form class="reminder-edit-form">
+          <label>Giờ</label>
+          <input type="time" name="time" value="${esc(ev.time)}" />
+          <label>Thuốc</label>
+          <input name="drug_name" value="${esc(ev.drug_name)}" />
+          <label>Liều lượng</label>
+          <input name="dose" value="${esc(ev.dose)}" />
+          <label>Ăn uống</label>
+          <select name="meal">
+            ${mealOption("sau ăn", ev.meal)}
+            ${mealOption("trước ăn", ev.meal)}
+            ${mealOption("trong bữa ăn", ev.meal)}
+            ${mealOption("không phụ thuộc bữa ăn", ev.meal)}
+            ${mealOption("khi cần", ev.meal)}
+          </select>
+          <div class="reminder-edit-actions">
+            <button type="button" class="btn-outlined btn-sm btn-cancel-reminder">Hủy</button>
+            <button type="submit" class="btn-tonal btn-sm">Lưu</button>
+          </div>
+        </form>
+      `;
+      li.querySelector(".btn-cancel-reminder").addEventListener("click", () => {
+        state.editingReminderId = null;
+        renderHome();
+      });
+      li.querySelector(".reminder-edit-form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
+        updateReminder(id, {
+          time: String(fd.get("time") || ev.time),
+          drug_name: String(fd.get("drug_name") || ev.drug_name).trim(),
+          dose: String(fd.get("dose") || ev.dose).trim(),
+          meal: String(fd.get("meal") || ev.meal).trim(),
+        });
+      });
+      ul.appendChild(li);
+      return;
+    }
+
     li.innerHTML = `
       <button type="button" class="reminder-check" aria-label="Đã uống"></button>
-      <div>
+      <div class="reminder-main">
         <span class="reminder-time">${ev.time}</span>
         <p class="body-sm" style="color:var(--md-on-surface);margin-top:2px">${esc(ev.drug_name)}</p>
         <p class="body-sm">${esc(ev.dose)} · ${esc(ev.meal)}</p>
@@ -351,8 +397,45 @@ function renderHome() {
       saveState();
       renderHome();
     });
+    li.querySelector(".reminder-main").addEventListener("click", () => {
+      state.editingReminderId = id;
+      renderHome();
+    });
     ul.appendChild(li);
   });
+}
+
+function mealOption(value, selected) {
+  return `<option value="${esc(value)}"${String(selected || "").toLowerCase() === value.toLowerCase() ? " selected" : ""}>${esc(value)}</option>`;
+}
+
+function updateReminder(oldId, patch) {
+  const idx = state.schedule.findIndex((ev) => eventId(ev) === oldId);
+  if (idx < 0) return;
+
+  const oldEvent = state.schedule[idx];
+  const wasDone = state.takenIds.has(oldId);
+  const updated = {
+    ...oldEvent,
+    time: patch.time || oldEvent.time,
+    drug_name: patch.drug_name || oldEvent.drug_name,
+    dose: patch.dose || oldEvent.dose,
+    meal: patch.meal || oldEvent.meal,
+  };
+  updated.label = `${updated.drug_name} — ${updated.dose}`;
+  state.schedule[idx] = updated;
+  state.schedule.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+
+  if (wasDone) {
+    state.takenIds.delete(oldId);
+    state.takenIds.add(eventId(updated));
+  }
+
+  state.editingReminderId = null;
+  saveState();
+  renderHome();
+  renderCalendar();
+  showNotif("Đã cập nhật nhắc uống", `${updated.time} · ${updated.drug_name}`);
 }
 
 function formatDateShort(iso) {
@@ -485,7 +568,7 @@ function renderDrugDetail(detail, drug, line) {
       </div>
 
       ${showCites ? '<div class="cite-mount"></div>' : ""}
-      ${drug.source === "fallback" ? '<button type="button" class="btn-tonal btn-retry-drug">Tra lại bằng AI</button>' : ""}
+      ${drug.source === "fallback" ? '<button type="button" class="btn-tonal btn-retry-drug">Tra lại nguồn Vinmec</button>' : ""}
     </div>`;
 
   detail.querySelector(".btn-retry-drug")?.addEventListener("click", async (e) => {
@@ -526,7 +609,7 @@ function mountDrugCard(list, line, drug, autoExpand = false) {
         <span class="expand-icon" style="transition: transform 0.2s; font-size: 1rem; color: var(--md-primary);">▼</span>
       </h3>
       <p class="drug-summary">${esc(drug.summary)}</p>
-      ${drug.source === "fallback" ? '<button type="button" class="btn-tonal btn-sm btn-retry-inline" style="margin-top: 8px;">Tra lại</button>' : ""}
+        ${drug.source === "fallback" ? '<button type="button" class="btn-tonal btn-sm btn-retry-inline" style="margin-top: 8px;">Tra lại nguồn Vinmec</button>' : ""}
     </div>
     <div class="drug-card-details hidden" style="margin-top: 0;"></div>
   `;
