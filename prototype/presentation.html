@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MediLịch — Presentation</title>
+<style>
+  :root {
+    --primary: #1b6b5a;
+    --primary-light: #a8f0e0;
+    --primary-dark: #0d4235;
+    --accent: #00bfa5;
+    --surface: #f7fbf9;
+    --on-surface: #1a1c1b;
+    --warn: #e65100;
+    --warn-bg: #fff3e0;
+    --error: #ba1a1a;
+    --error-bg: #ffdad6;
+    --ok: #137333;
+    --ok-bg: #e6f4ea;
+    --outline: #c5d5d0;
+    --muted: #5c6562;
+    --card-bg: #ffffff;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow: 0 4px 20px rgba(0,0,0,0.12);
+    --shadow-lg: 0 8px 40px rgba(0,0,0,0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    font-family: "Be Vietnam Pro", "Roboto", system-ui, sans-serif;
+    background: #0f1f1a;
+    color: var(--on-surface);
+  }
+
+  /* ─── Deck ─── */
+  .deck {
+    width: 100%; height: 100%;
+    position: relative;
+  }
+
+  .slide {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    padding: 48px 64px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(60px);
+    transition: opacity .4s ease, transform .4s ease;
+  }
+  .slide.active {
+    opacity: 1; pointer-events: auto; transform: none;
+  }
+  .slide.exit {
+    opacity: 0; transform: translateX(-60px);
+  }
+
+  /* ─── Nav ─── */
+  .nav {
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%);
+    display: flex; align-items: center; gap: 16px;
+    background: rgba(15,31,26,.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(168,240,224,.2);
+    border-radius: 999px;
+    padding: 10px 20px;
+    z-index: 100;
+  }
+  .nav button {
+    background: none; border: none; cursor: pointer;
+    color: #a8f0e0; font-size: 1.1rem; padding: 4px 10px;
+    border-radius: 6px; transition: background .15s;
+  }
+  .nav button:hover { background: rgba(168,240,224,.15); }
+  .nav button:disabled { opacity: .3; cursor: default; }
+  .slide-counter {
+    color: rgba(168,240,224,.7); font-size: .85rem;
+    min-width: 60px; text-align: center;
+  }
+  .progress {
+    position: fixed; top: 0; left: 0; height: 3px;
+    background: var(--accent);
+    transition: width .35s ease;
+    z-index: 200;
+  }
+
+  /* ─── Slide backgrounds ─── */
+  .slide-hero {
+    background: linear-gradient(135deg, #0d4235 0%, #1b6b5a 55%, #236b4a 100%);
+    color: white;
+  }
+  .slide-light { background: var(--surface); }
+  .slide-dark {
+    background: linear-gradient(155deg, #0f1f1a 0%, #1a2e27 100%);
+    color: white;
+  }
+  .slide-warn {
+    background: linear-gradient(135deg, #3e1500 0%, #7a2e00 100%);
+    color: white;
+  }
+  .slide-ok {
+    background: linear-gradient(135deg, #0d3320 0%, #1b6b5a 100%);
+    color: white;
+  }
+
+  /* ─── Typography ─── */
+  .eyebrow {
+    font-size: .78rem; font-weight: 700; letter-spacing: .12em;
+    text-transform: uppercase; opacity: .7; margin-bottom: 10px;
+  }
+  h1 { font-size: clamp(2.2rem, 4vw, 3.4rem); font-weight: 800; line-height: 1.1; }
+  h2 { font-size: clamp(1.6rem, 2.8vw, 2.4rem); font-weight: 700; line-height: 1.2; margin-bottom: 8px; }
+  h3 { font-size: clamp(1.1rem, 2vw, 1.5rem); font-weight: 600; margin-bottom: 6px; }
+  .lead { font-size: clamp(1rem, 1.6vw, 1.25rem); opacity: .85; line-height: 1.6; }
+  .label { font-size: .8rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+
+  /* ─── Layout helpers ─── */
+  .cols { display: flex; gap: 32px; width: 100%; align-items: flex-start; }
+  .col { flex: 1; }
+  .col-2 { flex: 2; }
+  .col-3 { flex: 3; }
+  .center { text-align: center; align-items: center; }
+  .full { width: 100%; }
+
+  /* ─── Card ─── */
+  .card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    box-shadow: var(--shadow);
+    color: var(--on-surface);
+  }
+  .card-sm { padding: 14px 18px; border-radius: var(--radius-sm); }
+  .card-dark {
+    background: rgba(255,255,255,.09);
+    border: 1px solid rgba(255,255,255,.14);
+    color: white;
+    box-shadow: none;
+  }
+
+  /* ─── Screenshot placeholder ─── */
+  .screenshot {
+    background: linear-gradient(145deg, #e8f0ed 0%, #d0e8e0 100%);
+    border-radius: var(--radius);
+    border: 2px dashed var(--primary);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 10px;
+    color: var(--primary);
+    font-size: .85rem; font-weight: 600;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .screenshot::before {
+    content: "";
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent, transparent 10px,
+      rgba(27,107,90,.04) 10px, rgba(27,107,90,.04) 20px
+    );
+  }
+  .screenshot-icon { font-size: 2.2rem; position: relative; z-index: 1; }
+  .screenshot-label { position: relative; z-index: 1; max-width: 140px; line-height: 1.4; }
+  .screenshot-sub {
+    position: relative; z-index: 1;
+    font-size: .72rem; opacity: .6; font-weight: 400;
+  }
+
+  /* phone-shaped screenshot */
+  .screenshot-phone {
+    width: 160px; height: 300px; flex-shrink: 0;
+    border-radius: 24px;
+    border: 3px dashed var(--primary);
+    background: linear-gradient(145deg, #e8f0ed 0%, #d0e8e0 100%);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 8px; color: var(--primary);
+    font-size: .75rem; font-weight: 600;
+    text-align: center; padding: 16px;
+    position: relative; overflow: hidden;
+  }
+  .screenshot-phone-dark {
+    border-color: rgba(168,240,224,.5);
+    background: rgba(168,240,224,.08);
+    color: var(--primary-light);
+  }
+  .screenshot-phone .icon { font-size: 2rem; position: relative; z-index: 1; }
+  .screenshot-phone > div { position: relative; z-index: 1; }
+  /* Real screenshot image — covers placeholder when loaded */
+  .sc-img {
+    position: absolute; inset: -3px;
+    width: calc(100% + 6px); height: calc(100% + 6px);
+    object-fit: cover; object-position: top center;
+    border-radius: 22px;
+    display: none;
+    z-index: 2;
+  }
+
+  /* ─── Chips / badges ─── */
+  .chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 12px; border-radius: 999px;
+    font-size: .78rem; font-weight: 700;
+  }
+  .chip-ok { background: var(--ok-bg); color: var(--ok); }
+  .chip-warn { background: var(--warn-bg); color: var(--warn); }
+  .chip-error { background: var(--error-bg); color: var(--error); }
+  .chip-ai { background: #e8eafd; color: #3730a3; }
+  .chip-moh { background: #e6f4ea; color: #137333; }
+
+  /* ─── List ─── */
+  .checklist { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .checklist li {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: clamp(.85rem, 1.3vw, 1rem);
+    line-height: 1.5;
+  }
+  .checklist li .ic {
+    flex-shrink: 0; margin-top: 1px;
+    font-size: 1.1rem;
+  }
+
+  /* ─── Step path row ─── */
+  .path-row {
+    display: flex; align-items: center; gap: 0;
+    width: 100%; margin: 16px 0;
+    flex-wrap: nowrap; overflow-x: auto;
+  }
+  .path-step {
+    flex: 1; min-width: 80px;
+    background: var(--card-bg);
+    border-radius: var(--radius-sm);
+    padding: 10px 8px;
+    text-align: center;
+    font-size: .78rem; font-weight: 600;
+    color: var(--primary);
+    box-shadow: var(--shadow);
+    position: relative;
+  }
+  .path-step .step-icon { font-size: 1.4rem; display: block; margin-bottom: 4px; }
+  .path-arrow {
+    flex-shrink: 0; color: var(--accent);
+    font-size: 1.2rem; padding: 0 4px;
+  }
+
+  /* ─── Feature grid ─── */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    width: 100%;
+  }
+  .feature-item {
+    background: var(--card-bg);
+    border-radius: var(--radius-sm);
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .feature-item .fi-icon { font-size: 1.8rem; }
+  .feature-item h4 { font-size: .9rem; font-weight: 700; color: var(--primary); }
+  .feature-item p { font-size: .78rem; color: var(--muted); line-height: 1.4; }
+
+  /* ─── Stat ─── */
+  .stat-row { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+  .stat {
+    text-align: center;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: var(--radius);
+    padding: 18px 28px;
+    min-width: 120px;
+  }
+  .stat .num { font-size: 2.4rem; font-weight: 800; line-height: 1; }
+  .stat .lbl { font-size: .78rem; opacity: .75; margin-top: 4px; }
+
+  /* ─── Demo step ─── */
+  .demo-steps { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+  .demo-step {
+    display: flex; gap: 14px; align-items: flex-start;
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+  }
+  .demo-step .ds-num {
+    flex-shrink: 0;
+    width: 28px; height: 28px;
+    background: var(--accent); color: #fff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .8rem; font-weight: 800;
+  }
+  .demo-step .ds-text { font-size: .9rem; line-height: 1.5; }
+  .demo-step .ds-text strong { color: #a8f0e0; }
+
+  /* ─── Quote ─── */
+  .quote-box {
+    border-left: 4px solid var(--accent);
+    padding: 14px 20px;
+    background: rgba(255,255,255,.07);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-style: italic;
+    font-size: clamp(.88rem, 1.4vw, 1.05rem);
+    line-height: 1.65;
+  }
+
+  /* ─── MOH badge demo ─── */
+  .moh-demo {
+    display: flex; flex-direction: column; gap: 10px; width: 100%;
+  }
+  .moh-row {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--card-bg);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    box-shadow: var(--shadow);
+  }
+  .moh-row .drug-name { flex: 1; font-weight: 600; font-size: .9rem; }
+  .moh-row .moh-badge {
+    padding: 4px 12px; border-radius: 999px;
+    font-size: .74rem; font-weight: 700;
+  }
+
+  /* ─── Tech table ─── */
+  .tech-table { width: 100%; border-collapse: collapse; }
+  .tech-table th, .tech-table td {
+    padding: 10px 14px; font-size: .88rem;
+    border-bottom: 1px solid rgba(255,255,255,.1);
+    text-align: left;
+  }
+  .tech-table th { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; opacity: .6; }
+  .tech-table tr:last-child td { border-bottom: none; }
+
+  /* ─── Backlog ─── */
+  .backlog-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px; width: 100%;
+  }
+  .backlog-item {
+    display: flex; gap: 10px; align-items: flex-start;
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: .85rem; line-height: 1.45;
+  }
+  .backlog-item .bi-icon { flex-shrink: 0; font-size: 1.2rem; }
+
+  /* ─── Rubric table ─── */
+  .rubric-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+  .rubric-table th, .rubric-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--outline);
+    text-align: left; vertical-align: top;
+  }
+  .rubric-table th { background: #e8f0ed; color: var(--primary); font-weight: 700; font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; }
+  .rubric-table tr:last-child td { border-bottom: none; }
+  .rubric-table tr:nth-child(even) td { background: #f7fbf9; }
+  .pass { color: var(--ok); font-weight: 700; }
+  .new { color: #7c3aed; font-weight: 700; }
+
+  /* ─── Pulse animation ─── */
+  @keyframes pulse { 0%,100%{opacity:.6} 50%{opacity:1} }
+  .pulse { animation: pulse 2s ease-in-out infinite; }
+
+  /* ─── Keyboard hint ─── */
+  .key-hint {
+    position: fixed; bottom: 28px; right: 28px;
+    font-size: .72rem; color: rgba(168,240,224,.4);
+    background: rgba(15,31,26,.6);
+    padding: 5px 10px; border-radius: 6px;
+    backdrop-filter: blur(6px);
+  }
+</style>
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+
+<div class="deck" id="deck">
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 1 — HERO TITLE
+  ══════════════════════════════════════════ -->
+  <div class="slide slide-hero center active" id="s0">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:24px;max-width:700px">
+      <div style="font-size:3.5rem">💊</div>
+      <div class="eyebrow" style="color:rgba(168,240,224,.7)">Day 06 · Healthcare Track · Batch 02 · Nhóm A@01</div>
+      <h1 style="text-align:center;color:white">MediLịch</h1>
+      <p class="lead" style="color:rgba(255,255,255,.85);text-align:center;max-width:520px">
+        Chụp đơn thuốc → AI trích xuất → Xác nhận → Lịch nhắc uống + Thẻ thuốc tiếng Việt
+      </p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:8px">
+        <span class="chip chip-ai">🤖 AI Augmentation</span>
+        <span class="chip chip-moh">🏥 Bộ Y tế</span>
+        <span style="background:rgba(255,255,255,.15);color:white;padding:4px 14px;border-radius:999px;font-size:.78rem;font-weight:700">4 Demo Paths</span>
+      </div>
+      <div class="stat-row" style="margin-top:12px">
+        <div class="stat"><div class="num">10–15'</div><div class="lbl">Thời gian gõ tay bị xóa bỏ</div></div>
+        <div class="stat"><div class="num">5M+</div><div class="lbl">Người dùng app nhắc thuốc toàn cầu</div></div>
+        <div class="stat"><div class="num">368</div><div class="lbl">Thuốc trong danh mục QĐ 403/2026</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 2 — VẤN ĐỀ
+  ══════════════════════════════════════════ -->
+  <div class="slide slide-dark" id="s1">
+    <div style="max-width:900px;width:100%;display:flex;flex-direction:column;gap:24px">
+      <div>
+        <div class="eyebrow" style="color:#a8f0e0">Vấn đề</div>
+        <h2 style="color:white">Sau khám về, đơn thuốc vẫn là bài toán chưa giải</h2>
+      </div>
+      <div class="cols">
+        <div class="col">
+          <ul class="checklist">
+            <li><span class="ic">⏱️</span><span style="color:rgba(255,255,255,.85)"><strong style="color:#a8f0e0">10–15 phút</strong> tự gõ lịch từ đơn 3 thuốc vào điện thoại — dễ sai tần suất và liều lượng</span></li>
+            <li><span class="ic">🔍</span><span style="color:rgba(255,255,255,.85)">Phải <strong style="color:#a8f0e0">Google từng tên thuốc</strong> để biết công dụng và cách uống an toàn</span></li>
+            <li><span class="ic">📷</span><span style="color:rgba(255,255,255,.85)">OCR nhận ra chữ nhưng <strong style="color:#a8f0e0">chưa parse được tần suất tiếng Việt</strong> ("sau ăn", "3 lần/ngày")</span></li>
+            <li><span class="ic">📱</span><span style="color:rgba(255,255,255,.85)">App nhắc thuốc hiện tại (MyTherapy, V-App) <strong style="color:#a8f0e0">chưa scan đơn tiếng Việt</strong> — vẫn phải nhập tay</span></li>
+          </ul>
+        </div>
+        <div class="col" style="display:flex;flex-direction:column;gap:12px">
+          <div class="card-dark card" style="border-left: 3px solid #a8f0e0">
+            <div class="label" style="color:#a8f0e0;margin-bottom:6px">Pain Statement</div>
+            <p style="color:rgba(255,255,255,.85);font-size:.9rem;line-height:1.6">
+              Người bệnh sau khám gặp khó ở bước <strong style="color:white">chuyển đơn giấy thành lịch uống</strong>, vì gõ tay tốn thời gian và dễ sai liều, dẫn tới <strong style="color:#ff8a80">nguy cơ uống sai — giảm hiệu quả hoặc quá liều</strong>.
+            </p>
+          </div>
+          <div class="card-dark card">
+            <div class="label" style="color:#a8f0e0;margin-bottom:6px">Nguồn evidence</div>
+            <ul style="list-style:none;display:flex;flex-direction:column;gap:6px">
+              <li style="font-size:.82rem;color:rgba(255,255,255,.75)">✅ Self-use: gõ 3 thuốc mất 10–15 phút</li>
+              <li style="font-size:.82rem;color:rgba(255,255,255,.75)">✅ Google Play crawl MyTherapy: 5M+ installs, 4.55⭐</li>
+              <li style="font-size:.82rem;color:rgba(255,255,255,.75)">✅ Crawl QĐ 403/QĐ-QLD 2026 — Bộ Y tế</li>
+              <li style="font-size:.82rem;color:rgba(255,255,255,.75)">✅ Teardown V-App: không đóng loop đơn → lịch</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 3 — GIẢI PHÁP
+  ══════════════════════════════════════════ -->
+  <div class="slide slide-light" id="s2">
+    <div style="max-width:900px;width:100%;display:flex;flex-direction:column;gap:20px">
+      <div>
+        <div class="eyebrow" style="color:var(--primary)">Giải pháp</div>
+        <h2>AI làm bản nháp — người bệnh quyết định</h2>
+        <p class="lead" style="margin-top:6px">Augmentation: AI extract + gợi ý lịch · User confirm trước khi Lưu · Không auto-save</p>
+      </div>
+
+      <div class="path-row">
+        <div class="path-step">
+          <span class="step-icon">📷</span>Chụp / Upload đơn
+        </div>
+        <div class="path-arrow">→</div>
+        <div class="path-step">
+          <span class="step-icon">🤖</span>AI OCR + Parse
+        </div>
+        <div class="path-arrow">→</div>
+        <div class="path-step" style="border: 2px solid var(--primary)">
+          <span class="step-icon">✏️</span><strong>Xác nhận (bắt buộc)</strong>
+        </div>
+        <div class="path-arrow">→</div>
+        <div class="path-step">
+          <span class="step-icon">🗓️</span>Lịch nhắc
+        </div>
+        <div class="path-arrow">→</div>
+        <div class="path-step">
+          <span class="step-icon">💊</span>Thẻ thuốc
+        </div>
+        <div class="path-arrow">→</div>
+        <div class="path-step" style="background:var(--ok-bg);color:var(--ok)">
+          <span class="step-icon">🏥</span>Kiểm tra Bộ Y tế
+        </div>
+      </div>
+
+      <div class="feature-grid">
+        <div class="feature-item">
+          <div class="fi-icon">📄</div>
+          <h4>Upload / Demo preset</h4>
+          <p>Ảnh đơn in, PDF, screenshot từ app bệnh viện · 3 fixture sẵn cho demo</p>
+        </div>
+        <div class="feature-item">
+          <div class="fi-icon">🤖</div>
+          <h4>OCR + AI Parse</h4>
+          <p>OpenAI Vision hoặc VietOCR → JSON: tên, liều, tần suất, ăn trước/sau, số ngày</p>
+        </div>
+        <div class="feature-item">
+          <div class="fi-icon">✏️</div>
+          <h4>Màn xác nhận</h4>
+          <p>Sửa từng field · Badge vàng khi OCR không chắc · Chặn nếu còn cảnh báo đỏ</p>
+        </div>
+        <div class="feature-item">
+          <div class="fi-icon">🗓️</div>
+          <h4>Lịch & Nhắc uống</h4>
+          <p>N lần/ngày → slots giờ (8h, 14h, 21h) · Đánh dấu đã uống · Snooze 5 phút</p>
+        </div>
+        <div class="feature-item">
+          <div class="fi-icon">💊</div>
+          <h4>Thẻ thuốc tiếng Việt</h4>
+          <p>Mô tả, cách uống, lưu ý quan trọng · Citation Vinmec · Nhà thuốc gần nhất</p>
+        </div>
+        <div class="feature-item" style="border: 2px solid var(--ok);background:#f0faf4">
+          <div class="fi-icon">🏥</div>
+          <h4 style="color:var(--ok)">MOH Registry (Mới)</h4>
+          <p>Đối chiếu QĐ 403/QĐ-QLD 2026 Bộ Y tế · Badge xanh/vàng xác minh lưu hành</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 4 — HAPPY PATH
+  ══════════════════════════════════════════ -->
+  <div class="slide slide-dark" id="s3">
+    <div style="max-width:920px;width:100%;display:flex;flex-direction:column;gap:20px">
+      <div>
+        <div class="eyebrow" style="color:#a8f0e0">Demo Path 1 / 4</div>
+        <h2 style="color:white">Happy Path — Đơn chuẩn, đọc rõ, lưu thành công</h2>
+        <div class="chip chip-ok" style="margin-top:8px">✅ Mọi thứ đúng ngay từ đầu</div>
+      </div>
+      <div class="cols" style="align-items:flex-start;gap:28px">
+        <div class="col-2">
+          <div class="demo-steps">
+            <div class="demo-step">
+              <div class="ds-num">1</div>
+              <div class="ds-text">Màn <strong>Quét đơn thuốc</strong> → tab <strong>Demo</strong> → chọn <strong>"Đơn chuẩn"</strong> → Tải mẫu</div>
+            </div>
+            <div class="demo-step">
+              <div class="ds-num">2</div>
+              <div class="ds-text">Màn <strong>Review</strong> — 3 thuốc parse đúng, không cần sửa → bấm <strong>Lưu lịch uống</strong></div>
+            </div>
+            <div class="demo-step">
+              <div class="ds-num">3</div>
+              <div class="ds-text">Màn <strong>Lịch</strong> — nhắc đúng 8h / 14h / 21h, ghi nhãn <strong>"sau ăn"</strong></div>
+            </div>
+            <div class="demo-step">
+              <div class="ds-num">4</div>
+              <div class="ds-text">Màn <strong>Thẻ thuốc</strong> — chạm từng thuốc, đọc mô tả; badge <strong style="color:#a8f0e0">Bộ Y tế: đã tìm thấy</strong> màu xanh</div>
+            </div>
+          </div>
+          <div class="quote-box" style="margin-top:16px">
+            "AI chỉ là bản nháp — lịch chỉ được tạo sau khi người bệnh bấm <strong>Lưu</strong>."
+          </div>
+        </div>
+        <div style="display:flex;gap:16px;flex-shrink:0">
+          <div class="screenshot-phone screenshot-phone-dark">
+            <img src="./screenshots/sc-01-upload-demo-preset.png" class="sc-img" alt="Màn Upload / Demo preset" onload="this.style.display='block'" onerror="this.style.display='none'">
+            <div class="icon">📄</div>
+            <div>Màn Upload / Demo preset</div>
+            <div style="font-size:.6rem;opacity:.45;margin-top:4px;word-break:break-all">sc-01-upload-demo-preset.png</div>
+          </div>
+          <div class="screenshot-phone screenshot-phone-dark">
+            <img src="./screenshots/sc-02-review-happy.png" class="sc-img" alt="Review — 3 thuốc parse đúng" onload="this.style.display='block'" onerror="this.style.display='none'">
+            <div class="icon">✅</div>
+            <div>Review — 3 thuốc parse đúng</div>
+            <div style="font-size:.6rem;opacity:.45;margin-top:4px;word-break:break-all">sc-02-review-happy.png</div>
+          </div>
+          <div class="screenshot-phone screenshot-phone-dark">
+            <img src="./screenshots/sc-03-calendar-schedule.png" class="sc-img" alt="Lịch nhắc 8h / 14h / 21h" onload="this.style.display='block'" onerror="this.style.display='none'">
+            <div class="icon">🗓️</div>
+            <div>Lịch nhắc 8h / 14h / 21h</div>
+            <div style="font-size:.6rem;opacity:.45;margin-top:4px;word-break:break-all">sc-03-calendar-schedule.png</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 5 — LOW-CONFIDENCE PATH
+  ══════════════════════════════════════════ -->
+  <div class="slide slide-dark" id="s4">
+    <div style="max-width:920px;width:100%;display:flex;flex-direction:column;gap:20px">
+      <div>
+        <div class="eyebrow" style="color:#a8f0e0">Demo Path 2 / 4</div>
+        <h2 style="color:white">Low-Confidence — OCR không chắc, bắt kiểm tra</h2>
+        <div class="chip chip-warn" style="margin-top:8px">⚠️ AI không tự lưu khi không chắc</div>
+      </div>
+      <div class="cols" style="align-items:flex-start;gap:28px">
+        <div class="col-2">
+          <div class="demo-steps">
+            <div class="demo-step">
+              <div class="ds-num">1</div>
+              <div class="ds-text">Tab <strong>Demo</strong> → chọn <strong>"Tần suất mờ"</strong> → Tải mẫu</div>
+            </div>
+            <div class="demo-step">
+              <div class="ds-num">2</div>
+              <div class="ds-text">Màn Review — field <strong style="color:#ffb74d">Tần suất</strong> có nền vàng ⚠️ — hệ thống không tin OCR đủ</div>
+            </div>
+            <div class="demo-step">
+              <div class="ds-num">3</div>
+              <div class="ds-text">Người dùng sửa thành <strong>3 lần/ngày</strong> → badge vàng biến mất → bấm <strong>Lưu</strong></div>
+            </div>
+          </div>
+          <div class="quote-box" style="margin-top:16px">
+            "Khi OCR không chắc, hệ thống <strong>bắt người dùng kiểm tra</strong> — không tự lưu sai vào lịch."
+          </div>
+          <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+            <div class="card card-sm" style="flex:1;min-width:140px;background:var(--warn-bg);border:1px solid #ffcc02">
+              <div style="font-size:.78rem;font-weight:700;color:var(--warn);margin-bottom:4px">Trước sửa</div>
+              <div style="font-size:.88rem">Tần suất: <span style="background:#fff3e0;border:1px dashed #e65100;padding:1px 6px;border-radius:4px">???</span></div>
+            </div>
+            <div style="font-size:1.4rem;display:flex;align-items:center;color:#a8f0e0;flex-shrink:0">→</div>
+            <div class="card card-sm" style="flex:1;min-width:140px;background:var(--ok-bg);border:1px solid #b7dfc2">
+              <div style="font-size:.78rem;font-weight:700;color:var(--ok);margin-bottom:4px">Sau sửa</div>
+              <div style="font-size:.88rem">Tần suất: <strong>3 lần/ngày</strong> ✅</div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:16px;flex-shrink:0">
+          <div class="screenshot-phone screenshot-phone-dark">
+            <img src="./screenshots/sc-04-review-lowconf-warning.png" class="sc-img" alt="Badge vàng — tần suất cần xác nhận" onload="this.style.display='block'" onerror="this.style.display='none'">
+            <div class="icon">⚠️</div>
+            <div>Badge vàng — tần suất cần xác nhận</div>
+            <div style="font-size:.6rem;opacity:.45;margin-top:4px;word-break:break-all">sc-04-review-lowconf-warning.png</div>
+          </div>
+          <div class="screenshot-phone screenshot-phone-dark">
+            <img src="./screenshots/sc-05-review-lowconf-fixed.png" class="sc-img" alt="Người dùng sửa → lưu thành công" onload="this.style.display='block'" onerror="this.style.display='none'">
+            <div class="icon">✏️</div>
+            <div>Người dùng sửa → lưu thành công</div>
+            <div style="font-size:.6rem;opacity:.45;margin-top:4px;word-break:break-all">sc-05-review-lowconf-fixed.png</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 6 — FAILURE PATH
+  ══════════════════════════════════════════ -->
+  <div class="slide slide-warn" id="s5">
+    <div style="max-width:920px;width:100%;display:flex;flex-direction:column;gap:20px">
+      <div>
+        <div class="eyebrow" style="color:#ffb74d">Demo Path 3 / 4 — Failure Mode Nguy Hiểm Nhất</div>
+        <h2 style="color:white">Failure Path — Sai liều: hệ thống chặn, không cho lưu</h2>
+        <div class="chip chip-error" style="margin-top:8px;background:rgba(255,82,82,.2);color:#ff8a80">🚫 Hard block khi tần suất bất thường</div>
+      </div>
+      <div class="cols" style="align-items:flex-start;gap:28px">
+        <div class="col-2">
+          <div class="demo-steps">
+            <div class="demo-step" style="border-color:rgba(255,82,82,.3)">
+              <div class="ds-num" style="background:#c62828">1</div>
+              <div class="ds-text">Tab <strong>Demo</strong> → chọn <strong>"Sai liều"</strong> → Tải mẫu</div>
+            </div>
+            <div class="demo-step" style="border-color:rgba(255,82,82,.3)">
+              <div class="ds-num" style="background:#c62828">2</div>
+              <div class="ds-text">Review: Amoxicillin parse ra <strong style="color:#ff8a80">1 lần/ngày</strong> (đúng phải là 3) — nền đỏ + badge nguy hiểm</div>
+            </div>
+            <div class="demo-step" style="border-color:rgba(255,82,82,.3)">
+              <div class="ds-num" style="background:#c62828">3</div>
+              <div class="ds-text">Bấm <strong>Lưu</strong> → <strong style="color:#ff8a80">bị chặn hoàn toàn</strong>; nút Lưu bị vô hiệu hoá</div>
+            </div>
+            <div class="demo-step">
+              <div class="ds-num" style="background:var(--ok)">4</div>
+              <div class="ds-text">Sửa thành <strong>3 lần/ngày</strong> → badge đỏ biến mất → Lưu thành công ✅</div>
+            </div>
+          </div>
+          <div class="quote-box" style="margin-top:16px;border-left-color:#ff8a80">
+            "Đây là failure mode nguy hiểm nhất: sai tần suất → uống thiếu liều → kém hiệu quả điều trị. Prototype <strong>chặn trước khi lưu</strong>."
+          </div>
+        </div>
+        <div style="display:flex;gap:16px;flex-shrink:0">
+          <div class="screenshot-phone" style="border-color:rgba(255,82,82,.6);background:rgba(255,82,82,.08);color:#ff8a80">
+            <img src="./screenshots/sc-06-review-failure-blocked.png" class="sc-img" alt="Cảnh báo đỏ — 1 lần/ngày bất thường" onload="this.style.display='block'" onerror="this.style.display='none'">
+            <div class="icon">🚫</div>
+            <div>Cảnh báo đỏ — 1 lần/ngày bất thường</div>
+            <div style="font-size:.6rem;opacity:.45;margin-top:4px;word-break:break-all">sc-06-review-failure-blocked.png</div>
+          </div>
+          <div class="screenshot-phone screenshot-phone-dark">
+            <img src="./screenshots/sc-07-review-failure-fixed.png" class="sc-img" alt="Sau khi sửa → Lưu thành công" onload="this.style.display='block'" onerror="this.style.display='none'">
+            <div class="icon">✅</div>
+            <div>Sau khi sửa → Lưu thành công</div>
+            <div style="font-size:.6rem;opacity:.45;margin-top:4px;word-break:break-all">sc-07-review-failure-fixed.png</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 7 — CORRECTION PATH
+  ══════════════════════════════════════════ -->
+  <div class="slide slide-dark" id="s6">
+    <div style="max-width:920px;width:100%;display:flex;flex-direction:column;gap:20px">
+      <div>
+        <div class="eyebrow" style="color:#a8f0e0">Demo Path 4 / 4</div>
+        <h2 style="color:white">Correction — Sửa tên thuốc → thẻ cập nhật theo</h2>
+        <div class="chip chip-ai" style="margin-top:8px">✏️ Sửa một lần — không cần Google lại</div>
+      </div>
+      <div class="cols" style="align-items:flex-start;gap:28px">
+        <div class="col-2">
+          <div class="demo-steps">
+            <div class="demo-step">
+              <div class="ds-num">1</div>
+              <div class="ds-text">Trên màn <strong>Review</strong>, đổi tên thuốc sang tên gần giống thuốc khác trong DB (vd. tên biệt dược)</div>
+            </div>
+            <div class="demo-step">
+              <div class="ds-num">2</div>
+              <div class="ds-text">Chuyển sang tab <strong>Thẻ thuốc</strong> — nội dung mô tả và lưu ý <strong>đổi theo tên mới</strong></div>
+            </div>
+            <div class="demo-step">
+              <div class="ds-num">3</div>
+              <div class="ds-text">Badge OCR hiển thị <strong style="color:#a8f0e0">"Đã sửa OCR"</strong> → ghi lại diff để team xem xét cải thiện model</div>
+            </div>
+          </div>
+          <div class="quote-box" style="margin-top:16px">
+            "Sửa trên màn xác nhận → drug card khớp lại ngay — <strong>không cần mở trình duyệt tìm từng tên thuốc</strong>."
+          </div>
+          <div class="card" style="margin-top:14px;background:linear-gradient(135deg,#e8eafd,#f3f4fd)">
+            <div class="label" style="color:#3730a3;margin-bottom:6px">Badge OCR correction</div>
+            <div style="font-size:.85rem">
+              <span style="background:#e8eafd;color:#3730a3;padding:2px 8px;border-radius:999px;font-size:.78rem;font-weight:700">Đã sửa OCR: Amoxicilin → Amoxicillin 500mg</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:16px;flex-shrink:0">
+          <div class="screenshot-phone screenshot-phone-dark">
+            <img src="./screenshots/sc-08-review-correction-edit.png" class="sc-img" alt="Sửa tên thuốc trên Review screen" onload="this.style.display='block'" onerror="this.style.display='none'">
+            <div class="icon">✏️</div>
+            <div>Sửa tên thuốc trên Review screen</div>
+            <div style="font-size:.6rem;opacity:.45;margin-top:4px;word-break:break-all">sc-08-review-correction-edit.png</div>
+          </div>
+          <div class="screenshot-phone screenshot-phone-dark">
+            <img src="./screenshots/sc-09-drugcard-correction-updated.png" class="sc-img" alt="Thẻ thuốc cập nhật theo tên mới" onload="this.style.display='block'" onerror="this.style.display='none'">
+            <div class="icon">💊</div>
+            <div>Thẻ thuốc cập nhật theo tên mới</div>
+            <div style="font-size:.6rem;opacity:.45;margin-top:4px;word-break:break-all">sc-09-drugcard-correction-updated.png</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 8 — MOH REGISTRY (THONGTU)
+  ══════════════════════════════════════════ -->
+  <div class="slide slide-ok" id="s7">
+    <div style="max-width:920px;width:100%;display:flex;flex-direction:column;gap:22px">
+      <div>
+        <div class="eyebrow" style="color:rgba(168,240,224,.8)">Tính năng mới — Thông tư / MOH Registry</div>
+        <h2 style="color:white">Xác minh lưu hành Bộ Y tế — Lớp tin cậy thứ 5</h2>
+        <p class="lead" style="color:rgba(255,255,255,.8);margin-top:6px">
+          Mỗi thẻ thuốc được đối chiếu tự động với danh mục <strong style="color:#a8f0e0">QĐ 403/QĐ-QLD ngày 29/05/2026</strong> — 368 thuốc được cấp phép lưu hành
+        </p>
+      </div>
+      <div class="cols" style="gap:24px">
+        <div class="col">
+          <div class="moh-demo">
+            <div class="moh-row">
+              <div class="drug-name">Amoxicillin 500mg</div>
+              <div class="moh-badge" style="background:#e6f4ea;color:#137333">🏥 Bộ Y tế: đã tìm thấy</div>
+            </div>
+            <div class="card" style="background:#e6f4ea;border:1px solid #b7dfc2;font-size:.82rem;color:#0d652d;padding:12px 16px">
+              <strong style="display:block;margin-bottom:6px">Đã tìm thấy trong danh mục Bộ Y tế</strong>
+              <dl style="display:grid;grid-template-columns:100px 1fr;gap:4px 8px">
+                <dt style="font-weight:700">Tên danh mục</dt><dd>Amoxicillin 500mg (viên nén)</dd>
+                <dt style="font-weight:700">Số đăng ký</dt><dd>VD-12345-21</dd>
+                <dt style="font-weight:700">Quyết định</dt><dd>QĐ 403/QĐ-QLD</dd>
+                <dt style="font-weight:700">Phụ lục</dt><dd>Phụ lục II</dd>
+              </dl>
+            </div>
+            <div class="moh-row">
+              <div class="drug-name">Thuốc XYZ không rõ nguồn gốc</div>
+              <div class="moh-badge" style="background:#fff3e0;color:#e65100">⚠️ Chưa thấy trong QĐ 403</div>
+            </div>
+            <div class="moh-row">
+              <div class="drug-name">Đang kiểm tra…</div>
+              <div class="moh-badge pulse" style="background:#e8f0ed;color:#5c6562">⏳ Đang kiểm tra Bộ Y tế</div>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <ul class="checklist" style="gap:14px">
+            <li style="align-items:flex-start">
+              <span class="ic">🗂️</span>
+              <div>
+                <strong style="color:white;display:block;margin-bottom:3px">Nguồn dữ liệu</strong>
+                <span style="color:rgba(255,255,255,.75);font-size:.88rem">Crawl PDF QĐ 403/QĐ-QLD 2026 + Thông tư 12/2025/TT-BYT + các quyết định đợt 179, 182, 322 từ dav.gov.vn</span>
+              </div>
+            </li>
+            <li style="align-items:flex-start">
+              <span class="ic">🔍</span>
+              <div>
+                <strong style="color:white;display:block;margin-bottom:3px">Tìm kiếm thông minh</strong>
+                <span style="color:rgba(255,255,255,.75);font-size:.88rem">Match theo tên thuốc, hoạt chất, số đăng ký — normalize tiếng Việt không dấu, loại bỏ stop-words</span>
+              </div>
+            </li>
+            <li style="align-items:flex-start">
+              <span class="ic">⚡</span>
+              <div>
+                <strong style="color:white;display:block;margin-bottom:3px">Batch prefetch</strong>
+                <span style="color:rgba(255,255,255,.75);font-size:.88rem">Tải toàn bộ registry khi save đơn — không lag khi mở thẻ thuốc</span>
+              </div>
+            </li>
+            <li style="align-items:flex-start">
+              <span class="ic">🔄</span>
+              <div>
+                <strong style="color:white;display:block;margin-bottom:3px">Cập nhật dễ dàng</strong>
+                <span style="color:rgba(255,255,255,.75);font-size:.88rem">Chỉ cần crawl PDF mới → server tự nhận khi restart; hỗ trợ thêm file JSON thủ công</span>
+              </div>
+            </li>
+          </ul>
+          <div style="display:flex;gap:10px;margin-top:16px">
+            <div class="screenshot-phone screenshot-phone-dark" style="width:140px;height:240px;flex-shrink:0;border-radius:18px">
+              <img src="./screenshots/sc-10-drugcard-moh-badge.png" class="sc-img" alt="Thẻ thuốc — badge Bộ Y tế" onload="this.style.display='block'" onerror="this.style.display='none'" style="border-radius:16px">
+              <div class="icon">🏥</div>
+              <div>Thẻ thuốc — badge Bộ Y tế</div>
+              <div style="font-size:.6rem;opacity:.45;margin-top:4px;word-break:break-all">sc-10-drugcard-moh-badge.png</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 9 — THẺ THUỐC & TÍNH NĂNG KHÁC
+  ══════════════════════════════════════════ -->
+  <div class="slide slide-light" id="s8">
+    <div style="max-width:920px;width:100%;display:flex;flex-direction:column;gap:20px">
+      <div>
+        <div class="eyebrow" style="color:var(--primary)">Tính năng hoàn chỉnh</div>
+        <h2>Thẻ thuốc tiếng Việt — đủ thông tin để người bệnh tự chủ</h2>
+      </div>
+      <div class="cols" style="gap:24px">
+        <div class="col" style="display:flex;flex-direction:column;gap:12px">
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+              <div>
+                <h3 style="color:var(--primary)">Amoxicillin 500mg <span style="font-size:.75rem;background:#e8eafd;color:#3730a3;padding:2px 8px;border-radius:999px">AI</span></h3>
+                <div class="chip chip-moh" style="margin-top:4px;font-size:.72rem">🏥 Bộ Y tế: đã tìm thấy</div>
+              </div>
+            </div>
+            <p style="font-size:.85rem;color:var(--muted);margin-bottom:10px">Kháng sinh nhóm penicillin, dùng điều trị nhiễm khuẩn đường hô hấp, tiêu hoá, da và mô mềm.</p>
+            <div style="font-size:.8rem;background:var(--primary-light);color:var(--primary-dark);padding:8px 12px;border-radius:8px;font-weight:500">
+              📋 Chỉ định: 3 lần/ngày (sau ăn)
+            </div>
+          </div>
+          <div class="cols" style="gap:10px">
+            <div class="card card-sm col" style="text-align:center">
+              <div style="font-size:1.2rem">📍</div>
+              <div style="font-size:.78rem;font-weight:600;color:var(--primary);margin-top:4px">Nhà thuốc gần nhất</div>
+              <div style="font-size:.72rem;color:var(--muted)">OpenStreetMap · bán kính 2.5km</div>
+            </div>
+            <div class="card card-sm col" style="text-align:center">
+              <div style="font-size:1.2rem">🔗</div>
+              <div style="font-size:.78rem;font-weight:600;color:var(--primary);margin-top:4px">Nguồn Vinmec</div>
+              <div style="font-size:.72rem;color:var(--muted)">Citation bài viết y tế xác thực</div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start">
+          <div class="screenshot-phone" style="width:155px;height:320px">
+            <img src="./screenshots/sc-11-drugcard-detail.png" class="sc-img" alt="Thẻ thuốc chi tiết" onload="this.style.display='block'" onerror="this.style.display='none'">
+            <div class="icon">💊</div>
+            <div>Thẻ thuốc chi tiết</div>
+            <div style="font-size:.6rem;opacity:.45;margin-top:4px;word-break:break-all">sc-11-drugcard-detail.png</div>
+          </div>
+          <div class="screenshot-phone" style="width:155px;height:320px">
+            <img src="./screenshots/sc-12-home-reminders.png" class="sc-img" alt="Nhắc uống — Home screen" onload="this.style.display='block'" onerror="this.style.display='none'">
+            <div class="icon">🔔</div>
+            <div>Nhắc uống — Home screen</div>
+            <div style="font-size:.6rem;opacity:.45;margin-top:4px;word-break:break-all">sc-12-home-reminders.png</div>
+          </div>
+          <div class="screenshot-phone" style="width:155px;height:320px">
+            <img src="./screenshots/sc-13-nearby-pharmacy.png" class="sc-img" alt="Nhà thuốc gần nhất" onload="this.style.display='block'" onerror="this.style.display='none'">
+            <div class="icon">📍</div>
+            <div>Nhà thuốc gần nhất</div>
+            <div style="font-size:.6rem;opacity:.45;margin-top:4px;word-break:break-all">sc-13-nearby-pharmacy.png</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 10 — RUBRIC EVALUATION
+  ══════════════════════════════════════════ -->
+  <div class="slide slide-light" id="s9">
+    <div style="max-width:900px;width:100%;display:flex;flex-direction:column;gap:18px">
+      <div>
+        <div class="eyebrow" style="color:var(--primary)">Đánh giá</div>
+        <h2>Thin SPEC Rubrics — Kết quả sau thongtu update</h2>
+      </div>
+      <table class="rubric-table">
+        <thead>
+          <tr><th>Tiêu chí</th><th>Trạng thái</th><th>Nhận xét</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>1. Track / User cụ thể</strong></td>
+            <td class="pass">✅ Đạt</td>
+            <td>Người bệnh / người nhà, đơn in/digital 2–5 thuốc, tự uống tại nhà</td>
+          </tr>
+          <tr>
+            <td><strong>2. Evidence summary</strong></td>
+            <td class="pass">✅ Đạt</td>
+            <td>Self-use + Google Play crawl MyTherapy + crawl QĐ 403/QĐ-QLD 2026</td>
+          </tr>
+          <tr>
+            <td><strong>3. Pain statement</strong></td>
+            <td class="pass">✅ Đạt</td>
+            <td>Who/where/why/consequence rõ; bằng chứng định lượng (10–15 phút)</td>
+          </tr>
+          <tr>
+            <td><strong>4. Build slice</strong></td>
+            <td class="pass">✅ Đạt</td>
+            <td>Demo 3–5 phút; in/out of scope tường minh</td>
+          </tr>
+          <tr>
+            <td><strong>5. Auto/Aug decision</strong></td>
+            <td class="pass">✅ Đạt</td>
+            <td>Augmentation + confirm bắt buộc; lý do rõ (sai liều = rủi ro sức khỏe)</td>
+          </tr>
+          <tr>
+            <td><strong>6. Four paths</strong></td>
+            <td class="pass">✅ Đạt</td>
+            <td>Happy / Low-conf / Failure / Correction — đủ fixture, demo được</td>
+          </tr>
+          <tr>
+            <td><strong>7. Failure mode</strong></td>
+            <td class="pass">✅ Đạt + Nâng cấp</td>
+            <td>5 lớp phòng hộ; lớp mới: MOH registry badge cảnh báo thuốc chưa xác minh</td>
+          </tr>
+          <tr>
+            <td><strong>8. Owner plan</strong></td>
+            <td class="pass">✅ Đạt</td>
+            <td>4 thành viên, phân công artifact cụ thể, repo sẵn</td>
+          </tr>
+          <tr>
+            <td><strong>Trust / nguồn dữ liệu</strong></td>
+            <td class="new">🆕 Mới</td>
+            <td>Badge xanh/vàng QĐ 403 — đóng gap "tin vào thông tin AI cung cấp"</td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="background:var(--ok-bg);border:1px solid #b7dfc2;border-radius:var(--radius-sm);padding:12px 16px;font-size:.88rem;color:var(--ok)">
+        <strong>Tất cả 8 tiêu chí đạt.</strong> Điểm cộng: trust layer MOH registry là differentiator rõ ràng so với MyTherapy và V-App.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 11 — TECH STACK
+  ══════════════════════════════════════════ -->
+  <div class="slide slide-dark" id="s10">
+    <div style="max-width:820px;width:100%;display:flex;flex-direction:column;gap:22px">
+      <div>
+        <div class="eyebrow" style="color:#a8f0e0">Kiến trúc</div>
+        <h2 style="color:white">Tech Stack — Build trong 1 ngày</h2>
+      </div>
+      <table class="tech-table" style="color:rgba(255,255,255,.9)">
+        <thead><tr><th>Layer</th><th>Công nghệ</th><th>Mục đích</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Frontend</strong></td>
+            <td>Vanilla JS ES Modules · CSS Material Design</td>
+            <td>Không cần build step — chạy được ngay</td>
+          </tr>
+          <tr>
+            <td><strong>Backend</strong></td>
+            <td>Node.js · Express · Multer</td>
+            <td>API gateway: parse-rx, drug-info, moh-registry, nearby</td>
+          </tr>
+          <tr>
+            <td><strong>OCR</strong></td>
+            <td>OpenAI Vision (gpt-4o-mini) · VietOCR sidecar (tuỳ chọn)</td>
+            <td>OCR + extract JSON per dòng thuốc</td>
+          </tr>
+          <tr>
+            <td><strong>AI Parse</strong></td>
+            <td>OpenAI / Gemini (LLM_PROVIDER)</td>
+            <td>Parse → normalize → review tên thuốc</td>
+          </tr>
+          <tr>
+            <td><strong>Drug DB</strong></td>
+            <td>Local drugs.json · AI fallback · Citation Vinmec</td>
+            <td>Drug card: mô tả, cách uống, lưu ý</td>
+          </tr>
+          <tr>
+            <td><strong style="color:#a8f0e0">MOH Registry</strong></td>
+            <td style="color:#a8f0e0">Python crawl (pdfplumber) → JSON · Node lookup</td>
+            <td style="color:#a8f0e0">QĐ 403/QĐ-QLD 2026 + đợt 179/182 + Thông tư 12</td>
+          </tr>
+          <tr>
+            <td><strong>Nearby</strong></td>
+            <td>OpenStreetMap Overpass API</td>
+            <td>Nhà thuốc gần nhất — không cần key</td>
+          </tr>
+          <tr>
+            <td><strong>Demo fallback</strong></td>
+            <td>3 fixture JSON: happy / low-conf / risky</td>
+            <td>Demo không cần API key — chạy offline</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       SLIDE 12 — KẾT LUẬN & BACKLOG
+  ══════════════════════════════════════════ -->
+  <div class="slide slide-hero center" id="s11">
+    <div style="max-width:860px;width:100%;display:flex;flex-direction:column;align-items:center;gap:24px">
+      <div class="eyebrow" style="color:rgba(168,240,224,.7)">Kết luận</div>
+      <h2 style="color:white;text-align:center">In scope · Backlog · Nhóm A@01</h2>
+
+      <div class="cols" style="width:100%;gap:20px">
+        <div class="col">
+          <div class="card card-dark" style="height:100%">
+            <div class="label" style="color:#a8f0e0;margin-bottom:12px">✅ Đã build (Day 06)</div>
+            <ul class="checklist">
+              <li><span class="ic">📷</span><span style="color:rgba(255,255,255,.85)">Upload + 3 fixture preset</span></li>
+              <li><span class="ic">🤖</span><span style="color:rgba(255,255,255,.85)">OCR + AI parse → JSON</span></li>
+              <li><span class="ic">✏️</span><span style="color:rgba(255,255,255,.85)">Review bắt buộc — hard block khi sai</span></li>
+              <li><span class="ic">🗓️</span><span style="color:rgba(255,255,255,.85)">Lịch nhắc + đánh dấu đã uống + snooze</span></li>
+              <li><span class="ic">💊</span><span style="color:rgba(255,255,255,.85)">Thẻ thuốc tiếng Việt + citation Vinmec</span></li>
+              <li><span class="ic">🏥</span><span style="color:#a8f0e0"><strong>MOH Registry — Bộ Y tế badge ✨ Mới</strong></span></li>
+              <li><span class="ic">📍</span><span style="color:rgba(255,255,255,.85)">Nhà thuốc gần nhất (OSM)</span></li>
+            </ul>
+          </div>
+        </div>
+        <div class="col">
+          <div class="backlog-grid">
+            <div class="backlog-item">
+              <div class="bi-icon">✍️</div>
+              <div><strong style="color:white;display:block">Đơn viết tay</strong><span style="color:rgba(255,255,255,.65)">OCR chất lượng thấp — literacy cao tuổi</span></div>
+            </div>
+            <div class="backlog-item">
+              <div class="bi-icon">📅</div>
+              <div><strong style="color:white;display:block">Calendar sync</strong><span style="color:rgba(255,255,255,.65)">Google / Apple Calendar export</span></div>
+            </div>
+            <div class="backlog-item">
+              <div class="bi-icon">🗄️</div>
+              <div><strong style="color:white;display:block">Full drug DB</strong><span style="color:rgba(255,255,255,.65)">Interaction checker · cách ngày · khi cần</span></div>
+            </div>
+            <div class="backlog-item">
+              <div class="bi-icon">🏥</div>
+              <div><strong style="color:white;display:block">HIS API thật</strong><span style="color:rgba(255,255,255,.65)">Vinmec / V-App in-ecosystem</span></div>
+            </div>
+          </div>
+          <div style="margin-top:14px;background:rgba(168,240,224,.1);border:1px solid rgba(168,240,224,.2);border-radius:var(--radius-sm);padding:12px 16px;font-size:.84rem;color:rgba(255,255,255,.8)">
+            <strong style="color:#a8f0e0">Nhóm:</strong> Nguyễn Hoàng Minh · Lương Quốc Dũng · Hoàng Khương Duy · Cù Tiến Nam
+          </div>
+        </div>
+      </div>
+
+      <div class="quote-box" style="width:100%;max-width:600px;text-align:center;border-left:none;border-top:3px solid var(--accent);border-radius:var(--radius-sm) var(--radius-sm) 0 0;background:rgba(255,255,255,.08)">
+        "Đơn in/digital · Review bắt buộc · Lịch + Thẻ · Bộ Y tế xác minh — demo 3–5 phút."
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.deck -->
+
+<!-- Navigation -->
+<div class="nav">
+  <button id="btn-prev" onclick="go(-1)" disabled>←</button>
+  <div class="slide-counter" id="counter">1 / 12</div>
+  <button id="btn-next" onclick="go(1)">→</button>
+</div>
+
+<div class="key-hint">← → hoặc bấm để chuyển slide</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const total = slides.length;
+  let cur = 0;
+
+  function go(dir) {
+    const prev = cur;
+    cur = Math.max(0, Math.min(total - 1, cur + dir));
+    if (cur === prev) return;
+
+    slides[prev].classList.remove('active');
+    slides[prev].classList.add('exit');
+    setTimeout(() => slides[prev].classList.remove('exit'), 420);
+
+    slides[cur].classList.add('active');
+
+    document.getElementById('counter').textContent = `${cur + 1} / ${total}`;
+    document.getElementById('btn-prev').disabled = cur === 0;
+    document.getElementById('btn-next').disabled = cur === total - 1;
+    document.getElementById('progress').style.width = `${((cur + 1) / total) * 100}%`;
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') go(1);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') go(-1);
+  });
+
+  // Touch swipe
+  let tx = 0;
+  document.addEventListener('touchstart', (e) => { tx = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].clientX - tx;
+    if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
+  });
+
+  // Init progress
+  document.getElementById('progress').style.width = `${(1 / total) * 100}%`;
+</script>
+</body>
+</html>
