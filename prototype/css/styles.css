@@ -610,6 +610,80 @@ html, body {
 .drug-detail { margin-top: 12px; width: 100%; }
 .drug-detail ul { margin-left: 18px; font-size: 0.88rem; }
 
+/* Citations */
+.drug-citations {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--md-outline);
+}
+.cite-disclaimer { color: var(--md-on-surface-variant); margin: 4px 0 8px; }
+.cite-list { list-style: none; margin: 0; padding: 0; }
+.cite-item {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--md-outline-variant);
+  font-size: 0.82rem;
+}
+.cite-item:last-child { border-bottom: none; }
+.cite-link {
+  color: var(--md-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+.cite-link:hover { text-decoration: underline; }
+.cite-type {
+  display: inline-block;
+  font-size: 0.65rem;
+  margin-left: 6px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--md-surface-variant);
+  color: var(--md-on-surface-variant);
+}
+.cite-excerpt {
+  display: block;
+  margin-top: 4px;
+  color: var(--md-on-surface-variant);
+  line-height: 1.4;
+}
+
+/* Nearby buy */
+.drug-nearby {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--md-outline);
+}
+.nearby-results { margin-top: 12px; }
+.nearby-list { list-style: none; margin: 0; padding: 0; }
+.nearby-row {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--md-outline-variant);
+  font-size: 0.82rem;
+}
+.nearby-row-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: baseline;
+}
+.nearby-dist {
+  font-size: 0.75rem;
+  color: var(--md-primary);
+  white-space: nowrap;
+}
+.nearby-type { font-size: 0.72rem; color: var(--md-on-surface-variant); }
+.nearby-addr { margin: 4px 0; color: var(--md-on-surface-variant); }
+.nearby-maps { margin-top: 8px; display: inline-block; }
+.nearby-maps-all { margin-top: 12px; text-align: center; }
+.nearby-ai-hint {
+  margin-bottom: 12px;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+}
+.hint-asks { margin-left: 18px; font-size: 0.82rem; }
+.surface-inset {
+  background: var(--md-surface-variant);
+}
+
 .chip-ai {
   font-size: 0.65rem;
   padding: 2px 8px;

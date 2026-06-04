@@ -36,3 +36,26 @@ export async function fetchDrugInfo(drugName) {
   if (!res.ok) throw new Error(data.error || `Lỗi tra thuốc (${res.status})`);
   return data;
 }
+
+export async function fetchNearbyPlaces(lat, lng, radius = 2500) {
+  const q = new URLSearchParams({
+    lat: String(lat),
+    lng: String(lng),
+    radius: String(radius),
+  });
+  const res = await fetch(`${API_BASE}/api/nearby?${q}`);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Lỗi tìm địa điểm (${res.status})`);
+  return data;
+}
+
+export async function fetchPharmacyHint(drugName, display) {
+  const res = await fetch(`${API_BASE}/api/pharmacy-hint`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ drug_name: drugName, display }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `Lỗi gợi ý mua (${res.status})`);
+  return data;
+}

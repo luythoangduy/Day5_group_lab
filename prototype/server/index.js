@@ -6,6 +6,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { createOpenAIClient, parseFromImage, parseFromText, normalizeLines } from "./openai-parse.js";
 import { lookupDrugInfo } from "./openai-drug.js";
+import { pharmacyHint } from "./openai-pharmacy-hint.js";
+import { findNearbyPlaces } from "./nearby-places.js";
 import { ocrWithVietOCR, pingVietOCR } from "./vietocr-client.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -41,7 +43,48 @@ app.get("/api/health", async (_req, res) => {
     vietocr: vietocrUp,
     ocr_mode: OCR_MODE,
     drug_lookup: true,
+    nearby_places: true,
+    pharmacy_hint: Boolean(openai),
   });
+});
+
+app.get("/api/nearby", async (req, res) => {
+  try {
+    const lat = Number(req.query.lat);
+    const lng = Number(req.query.lng);
+    const radius = Math.min(Number(req.query.radius) || 2500, 8000);
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      return res.status(400).json({ error: "Thiếu lat, lng hợp lệ" });
+    }
+
+    const places = await findNearbyPlaces(lat, lng, radius);
+    res.json({
+      places,
+      disclaimer:
+        "Dữ liệu OpenStreetMap. Không xác nhận nhà thuốc đang bán thuốc cụ thể — gọi hỏi trước.",
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message || "Nearby search failed" });
+  }
+});
+
+app.post("/api/pharmacy-hint", async (req, res) => {
+  try {
+    if (!openai) {
+      return res.status(503).json({ error: "Thiếu OPENAI_API_KEY" });
+    }
+    const drug_name = String(req.body?.drug_name || "").trim();
+    const display = String(req.body?.display || drug_name).trim();
+    if (!drug_name) return res.status(400).json({ error: "Thiếu drug_name" });
+
+    const hint = await pharmacyHint(openai, drug_name, display);
+    res.json(hint);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message || "Pharmacy hint failed" });
+  }
 });
 
 app.post("/api/drugs-lookup", async (req, res) => {
