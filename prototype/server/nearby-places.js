@@ -60,16 +60,21 @@ async function queryOverpass(url, query) {
   }
 
   const text = await res.text();
+  const trimmed = text.trim();
   if (!res.ok) {
     const hint =
       res.status === 406
         ? " — server từ chối request (thường do thiếu User-Agent hợp lệ)"
         : "";
-    throw new Error(`HTTP ${res.status}${hint}: ${text.slice(0, 120)}`);
+    throw new Error(`HTTP ${res.status}${hint}: ${trimmed.slice(0, 120)}`);
+  }
+
+  if (trimmed.startsWith("<") || trimmed.startsWith("<!")) {
+    throw new Error("Overpass trả HTML thay vì JSON");
   }
 
   try {
-    return JSON.parse(text);
+    return JSON.parse(trimmed);
   } catch {
     throw new Error("Overpass trả dữ liệu không phải JSON");
   }

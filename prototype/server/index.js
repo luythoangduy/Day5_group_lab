@@ -1,11 +1,14 @@
+import "./patch-fetch-json.js";
 import "dotenv/config";
 import express from "express";
+import { isFetchJsonPatched } from "./patch-fetch-json.js";
 import cors from "cors";
 import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createOpenAIClient, parseFromImage, parseFromText, normalizeLines } from "./openai-parse.js";
 import { lookupDrugInfo } from "./openai-drug.js";
+import { lookupCitations } from "./citation-lookup.js";
 import { pharmacyHint } from "./openai-pharmacy-hint.js";
 import { findNearbyPlaces } from "./nearby-places.js";
 import { ocrWithVietOCR, pingVietOCR } from "./vietocr-client.js";
@@ -45,7 +48,18 @@ app.get("/api/health", async (_req, res) => {
     drug_lookup: true,
     nearby_places: true,
     pharmacy_hint: Boolean(openai),
+    citations_safe: isFetchJsonPatched(),
+    build: "2026-06-04-citations-v2",
   });
+});
+
+process.on("unhandledRejection", (reason) => {
+  const msg = String(reason?.message || reason || "");
+  if (msg.includes("<!DOCTYPE") || msg.includes("Expected JSON but received HTML")) {
+    console.warn("[API] Mạng/proxy trả HTML thay JSON — kiểm tra VPN/proxy hoặc OPENAI_API_KEY");
+    return;
+  }
+  console.error("unhandledRejection:", reason);
 });
 
 app.get("/api/nearby", async (req, res) => {
@@ -67,6 +81,27 @@ app.get("/api/nearby", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message || "Nearby search failed" });
+  }
+});
+
+app.get("/api/citations", async (req, res) => {
+  try {
+    const name = String(req.query.name || req.query.drug_name || "").trim();
+    if (!name) return res.status(400).json({ error: "Thiếu name" });
+
+    const citations = await lookupCitations(name);
+    res.json({
+      drug_name: name,
+      citations,
+      verified: true,
+      note:
+        citations.length === 0
+          ? "Không tìm thấy bài viết/nhãn thuốc khớp trên PubMed, FDA, RxNorm, Wikipedia."
+          : "Chỉ hiển thị nguồn có kết quả tra cứu thật.",
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message || "Citation lookup failed" });
   }
 });
 

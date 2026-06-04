@@ -12,10 +12,14 @@ export async function ocrWithVietOCR(imageBuffer, mimeType, baseUrl) {
     const err = await res.text();
     throw new Error(`VietOCR failed (${res.status}): ${err}`);
   }
-  const data = await res.json();
+  const text = await res.text();
+  const trimmed = text.trim();
+  if (!trimmed.startsWith("{")) {
+    throw new Error("VietOCR trả dữ liệu không phải JSON");
+  }
+  const data = JSON.parse(trimmed);
   return data.text || "";
 }
-
 export async function pingVietOCR(baseUrl) {
   try {
     const res = await fetch(`${baseUrl.replace(/\/$/, "")}/health`, {
