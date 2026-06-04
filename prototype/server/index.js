@@ -5,6 +5,7 @@ import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createOpenAIClient, parseFromImage, parseFromText, normalizeLines } from "./openai-parse.js";
+import { lookupDrugInfo } from "./openai-drug.js";
 import { ocrWithVietOCR, pingVietOCR } from "./vietocr-client.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -35,10 +36,52 @@ app.get("/api/health", async (_req, res) => {
   const vietocrUp = await pingVietOCR(VIETOCR_URL);
   res.json({
     ok: true,
+    server: "medilich-node",
     openai: Boolean(openai),
     vietocr: vietocrUp,
     ocr_mode: OCR_MODE,
+    drug_lookup: true,
   });
+});
+
+app.post("/api/drugs-lookup", async (req, res) => {
+  try {
+    if (!openai) {
+      return res.status(503).json({ error: "Thiếu OPENAI_API_KEY" });
+    }
+    const names = Array.isArray(req.body?.drugs) ? req.body.drugs : [];
+    if (!names.length) return res.status(400).json({ error: "Thiếu mảng drugs" });
+
+    const results = {};
+    for (const name of names) {
+      const trimmed = String(name).trim();
+      if (!trimmed) continue;
+      try {
+        results[trimmed] = await lookupDrugInfo(openai, trimmed);
+      } catch (e) {
+        results[trimmed] = { error: e.message };
+      }
+    }
+    res.json({ results });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message || "Batch lookup failed" });
+  }
+});
+
+app.post("/api/drug-info", async (req, res) => {
+  try {
+    if (!openai) {
+      return res.status(503).json({ error: "Thiếu OPENAI_API_KEY" });
+    }
+    const name = req.body?.drug_name?.trim();
+    if (!name) return res.status(400).json({ error: "Thiếu drug_name" });
+    const info = await lookupDrugInfo(openai, name);
+    res.json(info);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message || "Drug lookup failed" });
+  }
 });
 
 app.post("/api/parse-rx", upload.single("image"), async (req, res) => {

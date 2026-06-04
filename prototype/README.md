@@ -45,14 +45,14 @@ VIETOCR_URL=http://127.0.0.1:5001
 - `openai`: luôn Vision.
 - `vietocr`: bắt buộc VietOCR (lỗi nếu service tắt).
 
-## Luồng app
+## Luồng app (giao diện Android — web)
 
-| Bước | Màn hình |
-|------|----------|
-| 1 | Upload ảnh **hoặc** tab Demo mẫu |
-| 2 | Review (sửa + chặn lỗi đỏ) |
-| 3 | Lịch nhắc |
-| 4 | Thẻ thuốc |
+1. **Quét đơn** → AI / demo → **Xác nhận** → **Lưu & đồng bộ lịch**
+2. **App chính** (bottom nav):
+   - **Nhắc** — nhắc tiếp theo, danh sách hôm nay, Đã uống, giả lập notification
+   - **Lịch** — lịch tháng, chạm ngày hoặc **Đồng bộ đơn ↔ lịch** (sheet 2 cột)
+   - **Thuốc** — thẻ thuốc
+3. Nút camera trên app bar → quét đơn mới
 
 ## API
 
