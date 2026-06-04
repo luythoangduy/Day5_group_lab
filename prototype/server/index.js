@@ -1,5 +1,7 @@
+import "./patch-fetch-json.js";
 import "dotenv/config";
 import express from "express";
+import { isFetchJsonPatched } from "./patch-fetch-json.js";
 import cors from "cors";
 import multer from "multer";
 import path from "path";
@@ -46,7 +48,18 @@ app.get("/api/health", async (_req, res) => {
     drug_lookup: true,
     nearby_places: true,
     pharmacy_hint: Boolean(openai),
+    citations_safe: isFetchJsonPatched(),
+    build: "2026-06-04-citations-v2",
   });
+});
+
+process.on("unhandledRejection", (reason) => {
+  const msg = String(reason?.message || reason || "");
+  if (msg.includes("<!DOCTYPE") || msg.includes("Expected JSON but received HTML")) {
+    console.warn("[API] Mạng/proxy trả HTML thay JSON — kiểm tra VPN/proxy hoặc OPENAI_API_KEY");
+    return;
+  }
+  console.error("unhandledRejection:", reason);
 });
 
 app.get("/api/nearby", async (req, res) => {
@@ -117,24 +130,15 @@ app.post("/api/drugs-lookup", async (req, res) => {
     const names = Array.isArray(req.body?.drugs) ? req.body.drugs : [];
     if (!names.length) return res.status(400).json({ error: "Thiếu mảng drugs" });
 
-    const fast = Boolean(req.body?.fast);
     const results = {};
-    const concurrency = 2;
-    for (let i = 0; i < names.length; i += concurrency) {
-      const chunk = names.slice(i, i + concurrency);
-      await Promise.all(
-        chunk.map(async (name) => {
-          const trimmed = String(name).trim();
-          if (!trimmed) return;
-          try {
-            results[trimmed] = await lookupDrugInfo(openai, trimmed, {
-              skipCitations: fast,
-            });
-          } catch (e) {
-            results[trimmed] = { error: e.message };
-          }
-        })
-      );
+    for (const name of names) {
+      const trimmed = String(name).trim();
+      if (!trimmed) continue;
+      try {
+        results[trimmed] = await lookupDrugInfo(openai, trimmed);
+      } catch (e) {
+        results[trimmed] = { error: e.message };
+      }
     }
     res.json({ results });
   } catch (err) {
